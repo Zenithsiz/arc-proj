@@ -36,7 +36,7 @@ class Tile():
 		"""
 		Returns the color of this tile
 		"""
-		if self.inner == None:
+		if self.inner is None:
 			return "gray"
 		elif self.inner == Race.RED:
 			return "red"
