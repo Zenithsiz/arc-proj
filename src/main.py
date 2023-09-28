@@ -37,12 +37,12 @@ class Tile():
 		Returns the color of this tile
 		"""
 		match self.inner:
-			case None: return "white"
+			case None: return "gray"
 			case Race.RED: return "red"
 			case Race.BLUE: return "blue"
 
 # Graph (initialized to empty)
-graph = nx.grid_2d_graph(10, 10)
+graph = nx.grid_2d_graph(50, 50)
 nx.set_node_attributes(graph, Tile.empty(), 'tile')
 
 # Set some initial tiles
@@ -51,12 +51,12 @@ graph.nodes[(1, 0)]['tile'] = Tile.filled(Race.RED)
 
 # Visualize graph
 with plt.ion():
-	fig = plt.figure()
+	fig = plt.figure(figsize=(5, 5))
 	ax = fig.add_subplot(1, 1, 1)
 
 	pos = { tile_pos: tile_pos for tile_pos in graph.nodes()}
 	node_colors = [tile['tile'].color() for tile_pos, tile in graph.nodes(data=True)]
-	nx.draw(graph, pos=pos, ax=ax, node_color=node_colors)
+	nx.draw_networkx_nodes(graph, pos=pos, ax=ax, node_color=node_colors, node_size=25, node_shape='s')
 
 	fig.tight_layout()
 	plt.show(block = True)
