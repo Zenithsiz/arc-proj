@@ -47,14 +47,14 @@ nx.set_node_attributes(graph, Tile.empty(), 'tile')
 
 # Set some initial tiles
 graph.nodes[(0, 0)]['tile'] = Tile.filled(Race.BLUE)
-graph.nodes[(0, 1)]['tile'] = Tile.filled(Race.RED)
+graph.nodes[(1, 0)]['tile'] = Tile.filled(Race.RED)
 
 # Visualize graph
-pos = {(x,y):(y,-x) for x,y in graph.nodes()}
 with plt.ion():
 	fig = plt.figure()
 	ax = fig.add_subplot(1, 1, 1)
 
+	pos = { tile_pos: tile_pos for tile_pos in graph.nodes()}
 	node_colors = [tile['tile'].color() for tile_pos, tile in graph.nodes(data=True)]
 	nx.draw(graph, pos=pos, ax=ax, node_color=node_colors)
 
