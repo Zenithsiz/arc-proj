@@ -1,13 +1,21 @@
+"""
+ARC Project
+"""
+
+# Imports
 import networkx as nx
 import matplotlib.pyplot as plt
 
-G = nx.grid_2d_graph(5, 5)  # 5x5 grid
-# This example needs Graphviz and PyGraphviz
-nx.nx_agraph.write_dot(G, "grid.dot")
-# Having created the dot file, graphviz can be invoked via the command line
-# to generate an image on disk, e.g.
-print("Now run: neato -Tps grid.dot >grid.ps")
+# Graph
+graph = nx.grid_2d_graph(10, 10)
 
-# Alternatively, the and image can be created directly via AGraph.draw
-A = nx.nx_agraph.to_agraph(G)
-A.draw("5x5.png", prog="neato")
+
+# Visualize graph
+pos = {(x,y):(y,-x) for x,y in graph.nodes()}
+with plt.ion():
+	fig = plt.figure()
+	ax = fig.add_subplot(1, 1, 1)
+	nx.draw(graph, pos=pos, ax=ax)
+
+	fig.tight_layout()
+	plt.show(block = True)
