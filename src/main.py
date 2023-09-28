@@ -41,12 +41,13 @@ class Tile():
 			case Race.RED: return "red"
 			case Race.BLUE: return "blue"
 
-# Graph
+# Graph (initialized to empty)
 graph = nx.grid_2d_graph(10, 10)
-
 nx.set_node_attributes(graph, Tile.empty(), 'tile')
-nx.set_node_attributes(graph, { (0, 0): Tile.filled(Race.BLUE) }, 'tile')
-nx.set_node_attributes(graph, { (0, 1): Tile.filled(Race.RED) }, 'tile')
+
+# Set some initial tiles
+graph.nodes[(0, 0)]['tile'] = Tile.filled(Race.BLUE)
+graph.nodes[(0, 1)]['tile'] = Tile.filled(Race.RED)
 
 # Visualize graph
 pos = {(x,y):(y,-x) for x,y in graph.nodes()}
