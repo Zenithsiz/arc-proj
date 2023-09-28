@@ -36,10 +36,12 @@ class Tile():
 		"""
 		Returns the color of this tile
 		"""
-		match self.inner:
-			case None: return "gray"
-			case Race.RED: return "red"
-			case Race.BLUE: return "blue"
+		if self.inner == None:
+			return "gray"
+		elif self.inner == Race.RED:
+			return "red"
+		elif self.inner == Race.BLUE:
+			return "blue"
 
 # Graph (initialized to empty)
 graph = nx.grid_2d_graph(50, 50)
