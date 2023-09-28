@@ -1,0 +1,12 @@
+[FORMAT]
+indent-string='\t'
+max-line-length=120
+
+# `f`: Callbacks
+# `it`: Iterators
+good-names=f,it
+
+[MESSAGES CONTROL]
+
+# W0511: This shouldn't be a warning
+disable=W0511
