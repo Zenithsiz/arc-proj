@@ -4,6 +4,7 @@ ARC Project
 
 # Imports
 from enum import Enum
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -14,7 +15,7 @@ from arc_proj.tile import Tile
 if __name__ == "__main__":
 	# Graph (initialized to empty)
 	graph_size = [50, 50]
-	graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
+	graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
 	nx.set_node_attributes(graph, Tile.empty(), 'tile')
 
 	# Add the diagonal edges
@@ -58,9 +59,10 @@ if __name__ == "__main__":
 			ax.axis("off")
 
 			# Then calculate the image
-			img = [[0 for _ in range(graph_size[0])] for _ in range(graph_size[1])]
-			for (tile_pos_x, tile_pos_y), tile in graph.nodes(data = True):
-				img[tile_pos_y][tile_pos_x] = tile['tile'].color()
+			img: list[list[Tuple[int, int, int]]] = [[[0, 0, 0] for _ in range(graph_size[0])] for _ in range(graph_size[1])]
+			for tile_pos, tile in graph.nodes(data = True):
+				tile: Tile = tile['tile']
+				img[tile_pos[1]][tile_pos[0]] = tile.color()
 
 			# And finally show it
 			ax.imshow(img)
