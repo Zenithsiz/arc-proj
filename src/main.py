@@ -5,6 +5,7 @@ ARC Project
 # Imports
 from dataclasses import dataclass
 from enum import Enum
+from typing import Tuple
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -32,16 +33,16 @@ class Tile():
 		return Tile(race)
 
 
-	def color(self) -> str:
+	def color(self) -> Tuple[int, int, int]:
 		"""
 		Returns the color of this tile
 		"""
 		if self.inner is None:
-			return "gray"
+			return [0.5, 0.5, 0.5]
 		elif self.inner == Race.RED:
-			return "red"
+			return [1.0, 0.0, 0.0]
 		elif self.inner == Race.BLUE:
-			return "blue"
+			return [0.0, 0.0, 1.0]
 
 # Graph (initialized to empty)
 graph = nx.grid_2d_graph(50, 50)
@@ -56,9 +57,15 @@ with plt.ion():
 	fig = plt.figure(figsize=(5, 5))
 	ax = fig.add_subplot(1, 1, 1)
 
-	pos = { tile_pos: tile_pos for tile_pos in graph.nodes()}
-	node_colors = [tile['tile'].color() for tile_pos, tile in graph.nodes(data=True)]
-	nx.draw_networkx_nodes(graph, pos=pos, ax=ax, node_color=node_colors, node_size=25, node_shape='s')
+	# Create the image to display
+	img = [[0 for _ in range(50)] for _ in range(50)]
+	for (tile_pos_x, tile_pos_y), tile in graph.nodes(data = True):
+		img[tile_pos_y][tile_pos_x] = tile['tile'].color()
 
+	# Then draw it without any axis
+	ax.imshow(img)
+	ax.axis("off")
+
+	# And show it (until the user closes it)
 	fig.tight_layout()
 	plt.show(block = True)
