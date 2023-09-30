@@ -52,20 +52,47 @@ nx.set_node_attributes(graph, Tile.empty(), 'tile')
 graph.nodes[(0, 0)]['tile'] = Tile.filled(Race.BLUE)
 graph.nodes[(1, 0)]['tile'] = Tile.filled(Race.RED)
 
+# Display method
+class DisplayMethod(Enum):
+	# Displays as a general graph, with edges
+	GRAPH = 1
+
+	# Displays as a compact grid, without any spacing between nodes
+	GRID = 2
+
+display_method = DisplayMethod.GRAPH
+
 # Visualize graph
 with plt.ion():
-	fig = plt.figure(figsize=(5, 5))
+	# Create the figure
+	fig = plt.figure()
 	ax = fig.add_subplot(1, 1, 1)
 
-	# Create the image to display
-	img = [[0 for _ in range(50)] for _ in range(50)]
-	for (tile_pos_x, tile_pos_y), tile in graph.nodes(data = True):
-		img[tile_pos_y][tile_pos_x] = tile['tile'].color()
+	# Draw it using the display method
+	if display_method == DisplayMethod.GRAPH:
+		# Setup the positions and colors
+		node_pos = { tile_pos: tile_pos for tile_pos in graph.nodes()}
+		node_colors = [tile['tile'].color() for _, tile in graph.nodes(data=True)]
 
-	# Then draw it without any axis
-	ax.imshow(img)
-	ax.axis("off")
+		# And finally draw the nodes and edges
+		nx.draw_networkx_nodes(graph, pos=node_pos, ax=ax, node_color=node_colors, node_size=25, node_shape='s')
+		nx.draw_networkx_edges(graph, pos=node_pos, ax=ax)
 
-	# And show it (until the user closes it)
+	elif display_method == DisplayMethod.GRID:
+		# Disable axis
+		ax.axis("off")
+
+		# Then calculate the image
+		img = [[0 for _ in range(50)] for _ in range(50)]
+		for (tile_pos_x, tile_pos_y), tile in graph.nodes(data = True):
+			img[tile_pos_y][tile_pos_x] = tile['tile'].color()
+
+		# And finally show it
+		ax.imshow(img)
+
+	else:
+		raise ValueError("Unknown display method")
+
+	# Finally show it
 	fig.tight_layout()
 	plt.show(block = True)
