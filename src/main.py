@@ -3,103 +3,70 @@ ARC Project
 """
 
 # Imports
-from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple
 import networkx as nx
 import matplotlib.pyplot as plt
 
-class Race(Enum):
-	RED = 1
-	BLUE = 2
+from arc_proj.race import Race
+from arc_proj.tile import Tile
 
-@dataclass
-class Tile():
-	# Value, either a race or an empty tile
-	inner: Race | None
+if __name__ == "__main__":
+	# Graph (initialized to empty)
+	graph_size = [50, 50]
+	graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
+	nx.set_node_attributes(graph, Tile.empty(), 'tile')
 
-	@staticmethod
-	def empty():
-		"""
-		Returns an empty tile
-		"""
-		return Tile(None)
+	# Add the diagonal edges
+	for y in range(graph_size[1] - 1):
+		for x in range(graph_size[0] - 1):
+			graph.add_edge((x, y), (x + 1, y + 1))
+			graph.add_edge((x + 1, y), (x, y + 1))
 
-	@staticmethod
-	def filled(race: Race):
-		"""
-		Returns a filled tile
-		"""
-		return Tile(race)
+	# Set some initial tiles
+	graph.nodes[(0, 0)]['tile'] = Tile.filled(Race.BLUE)
+	graph.nodes[(1, 0)]['tile'] = Tile.filled(Race.RED)
 
+	# Display method
+	class DisplayMethod(Enum):
+		# Displays as a general graph, with edges
+		GRAPH = 1
 
-	def color(self) -> Tuple[int, int, int]:
-		"""
-		Returns the color of this tile
-		"""
-		if self.inner is None:
-			return [0.5, 0.5, 0.5]
-		elif self.inner == Race.RED:
-			return [1.0, 0.0, 0.0]
-		elif self.inner == Race.BLUE:
-			return [0.0, 0.0, 1.0]
+		# Displays as a compact grid, without any spacing between nodes
+		GRID = 2
 
-# Graph (initialized to empty)
-graph_size = [50, 50]
-graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
-nx.set_node_attributes(graph, Tile.empty(), 'tile')
+	display_method = DisplayMethod.GRAPH
 
-# Add the diagonal edges
-for y in range(graph_size[1] - 1):
-	for x in range(graph_size[0] - 1):
-		graph.add_edge((x, y), (x + 1, y + 1))
-		graph.add_edge((x + 1, y), (x, y + 1))
+	# Visualize graph
+	with plt.ion():
+		# Create the figure
+		fig = plt.figure()
+		ax = fig.add_subplot(1, 1, 1)
 
-# Set some initial tiles
-graph.nodes[(0, 0)]['tile'] = Tile.filled(Race.BLUE)
-graph.nodes[(1, 0)]['tile'] = Tile.filled(Race.RED)
+		# Draw it using the display method
+		if display_method == DisplayMethod.GRAPH:
+			# Setup the positions and colors
+			node_pos = { tile_pos: tile_pos for tile_pos in graph.nodes()}
+			node_colors = [tile['tile'].color() for _, tile in graph.nodes(data=True)]
 
-# Display method
-class DisplayMethod(Enum):
-	# Displays as a general graph, with edges
-	GRAPH = 1
+			# And finally draw the nodes and edges
+			nx.draw_networkx_nodes(graph, pos=node_pos, ax=ax, node_color=node_colors, node_size=25, node_shape='s')
+			nx.draw_networkx_edges(graph, pos=node_pos, ax=ax)
 
-	# Displays as a compact grid, without any spacing between nodes
-	GRID = 2
+		elif display_method == DisplayMethod.GRID:
+			# Disable axis
+			ax.axis("off")
 
-display_method = DisplayMethod.GRAPH
+			# Then calculate the image
+			img = [[0 for _ in range(graph_size[0])] for _ in range(graph_size[1])]
+			for (tile_pos_x, tile_pos_y), tile in graph.nodes(data = True):
+				img[tile_pos_y][tile_pos_x] = tile['tile'].color()
 
-# Visualize graph
-with plt.ion():
-	# Create the figure
-	fig = plt.figure()
-	ax = fig.add_subplot(1, 1, 1)
+			# And finally show it
+			ax.imshow(img)
 
-	# Draw it using the display method
-	if display_method == DisplayMethod.GRAPH:
-		# Setup the positions and colors
-		node_pos = { tile_pos: tile_pos for tile_pos in graph.nodes()}
-		node_colors = [tile['tile'].color() for _, tile in graph.nodes(data=True)]
+		else:
+			raise ValueError("Unknown display method")
 
-		# And finally draw the nodes and edges
-		nx.draw_networkx_nodes(graph, pos=node_pos, ax=ax, node_color=node_colors, node_size=25, node_shape='s')
-		nx.draw_networkx_edges(graph, pos=node_pos, ax=ax)
-
-	elif display_method == DisplayMethod.GRID:
-		# Disable axis
-		ax.axis("off")
-
-		# Then calculate the image
-		img = [[0 for _ in range(graph_size[0])] for _ in range(graph_size[1])]
-		for (tile_pos_x, tile_pos_y), tile in graph.nodes(data = True):
-			img[tile_pos_y][tile_pos_x] = tile['tile'].color()
-
-		# And finally show it
-		ax.imshow(img)
-
-	else:
-		raise ValueError("Unknown display method")
-
-	# Finally show it
-	fig.tight_layout()
-	plt.show(block = True)
+		# Finally show it
+		fig.tight_layout()
+		plt.show(block = True)
