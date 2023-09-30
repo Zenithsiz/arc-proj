@@ -45,8 +45,15 @@ class Tile():
 			return [0.0, 0.0, 1.0]
 
 # Graph (initialized to empty)
-graph = nx.grid_2d_graph(50, 50)
+graph_size = [50, 50]
+graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
 nx.set_node_attributes(graph, Tile.empty(), 'tile')
+
+# Add the diagonal edges
+for y in range(graph_size[1] - 1):
+	for x in range(graph_size[0] - 1):
+		graph.add_edge((x, y), (x + 1, y + 1))
+		graph.add_edge((x + 1, y), (x, y + 1))
 
 # Set some initial tiles
 graph.nodes[(0, 0)]['tile'] = Tile.filled(Race.BLUE)
@@ -83,7 +90,7 @@ with plt.ion():
 		ax.axis("off")
 
 		# Then calculate the image
-		img = [[0 for _ in range(50)] for _ in range(50)]
+		img = [[0 for _ in range(graph_size[0])] for _ in range(graph_size[1])]
 		for (tile_pos_x, tile_pos_y), tile in graph.nodes(data = True):
 			img[tile_pos_y][tile_pos_x] = tile['tile'].color()
 
