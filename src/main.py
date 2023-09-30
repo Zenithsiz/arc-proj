@@ -11,6 +11,7 @@ import networkx as nx
 
 from arc_proj.race import Race
 from arc_proj.tile import Tile
+import random
 
 if __name__ == "__main__":
 	# Graph (initialized to empty)
@@ -25,8 +26,12 @@ if __name__ == "__main__":
 			graph.add_edge((x + 1, y), (x, y + 1))
 
 	# Set some initial tiles
-	graph.nodes[(0, 0)]['tile'] = Tile.filled(Race.BLUE)
-	graph.nodes[(1, 0)]['tile'] = Tile.filled(Race.RED)
+	random.seed(773)
+	for race in [Race.BLUE, Race.RED]:
+		for _ in range(1000):
+			x = random.randint(0, graph_size[0] - 1)
+			y = random.randint(0, graph_size[1] - 1)
+			graph.nodes[(x, y)]['tile'] = Tile.filled(race)
 
 	# Display method
 	class DisplayMethod(Enum):
@@ -36,7 +41,7 @@ if __name__ == "__main__":
 		# Displays as a compact grid, without any spacing between nodes
 		GRID = 2
 
-	display_method = DisplayMethod.GRAPH
+	display_method = DisplayMethod.GRID
 
 	# Visualize graph
 	with plt.ion():
