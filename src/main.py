@@ -4,8 +4,9 @@ ARC Project
 
 # Imports
 from enum import Enum
-import networkx as nx
+
 import matplotlib.pyplot as plt
+import networkx as nx
 
 from arc_proj.race import Race
 from arc_proj.tile import Tile

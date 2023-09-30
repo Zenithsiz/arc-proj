@@ -4,7 +4,9 @@ Tile
 
 from dataclasses import dataclass
 from typing import Tuple
+
 from arc_proj.race import Race
+
 
 @dataclass
 class Tile():
