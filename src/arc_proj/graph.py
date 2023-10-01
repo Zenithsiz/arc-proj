@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from arc_proj.agent import Agent
-
+import arc_proj.util as util
 
 class Graph:
 	"""
@@ -56,7 +56,7 @@ class Graph:
 
 		# If the node is empty, it doesn't have a satisfaction
 		node = self.graph.nodes[node_pos]
-		agent: Agent | None = node['agent'] if 'agent' in node else None
+		agent = util.try_index_dict(node, 'agent')
 		if agent is None:
 			return None
 		agent: Agent
@@ -64,7 +64,7 @@ class Graph:
 		# Else count all neighbors that aren't empty
 		neighbors = nx.neighbors(self.graph, node_pos)
 		neighbors: Generator[Any] = (self.graph.nodes[neighbor_pos] for neighbor_pos in neighbors)
-		neighbors: Generator[Agent | None] = map(lambda node: node['agent'] if 'agent' in node else None, neighbors)
+		neighbors: Generator[Agent | None] = map(lambda node: util.try_index_dict(node, 'agent'), neighbors)
 		neighbors: Generator[Agent] = filter(lambda agent: agent is not None, neighbors)
 		neighbors: list[Agent] = list(neighbors)
 
@@ -83,7 +83,7 @@ class Graph:
 		"""
 		img = [[(0, 0, 0) for _ in range(self.size[0])] for _ in range(self.size[1])]
 		for node_pos, node in self.graph.nodes(data = True):
-			node: Agent | None = node['agent'] if 'agent' in node else None
+			node = util.try_index_dict(node, 'agent')
 			img[node_pos[1]][node_pos[0]] = node.color() if node is not None else [0.5, 0.5, 0.5]
 
 		return img
@@ -105,7 +105,8 @@ class Graph:
 		"""
 
 		node_pos = { node_pos: node_pos for node_pos in self.graph.nodes()}
-		node_colors = [node['agent'].color() if 'agent' in node else [0.5, 0.5, 0.5] for _, node in self.graph.nodes(data=True)]
+		agents = (util.try_index_dict(node, 'agent') for _, node in self.graph.nodes(data=True))
+		node_colors = [agent.color() if agent is not None else [0.5, 0.5, 0.5] for agent in agents]
 
 		# And finally draw the nodes and edges
 		ax = fig.add_subplot(1, 1, 1)
