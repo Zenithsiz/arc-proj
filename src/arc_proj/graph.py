@@ -47,49 +47,6 @@ class Graph:
 			y = random.randint(0, self.size[1] - 1)
 			self.graph.nodes[(x, y)]['agent'] = agent
 
-
-	def node_neighbors_pos(self, node_pos: Tuple[int, int]) -> list[Tuple[int, int]]:
-		"""
-		Returns all neighbor positions of `node_pos`.
-		"""
-
-		x = node_pos[0]
-		y = node_pos[1]
-		w = self.size[0]
-		h = self.size[1]
-
-		neighbors = []
-
-		# *--
-		# *--
-		# *--
-		if x > 0:
-			neighbors.append((x-1, y))
-			if y > 0:
-				neighbors.append((x-1, y-1))
-			if y < h - 1:
-				neighbors.append((x-1, y+1))
-
-		# -*-
-		# ---
-		# -*-
-		if y > 0:
-			neighbors.append((x, y-1))
-		if y < h - 1:
-			neighbors.append((x, y+1))
-
-		# --*
-		# --*
-		# --*
-		if x < w - 1:
-			neighbors.append((x+1, y))
-			if y > 0:
-				neighbors.append((x+1, y-1))
-			if y < h - 1:
-				neighbors.append((x+1, y+1))
-
-		return neighbors
-
 	def agent_satisfaction(self, node_pos: Tuple[int, int]) -> float | None:
 		"""
 		Returns the satisfaction of an agent, from 0.0 to 1.0.
@@ -105,8 +62,8 @@ class Graph:
 		agent: Agent
 
 		# Else count all neighbors that aren't empty
-		neighbors_pos = self.node_neighbors_pos(node_pos)
-		neighbors: Generator[Any] = (self.graph.nodes[neighbor_pos] for neighbor_pos in neighbors_pos)
+		neighbors = nx.neighbors(self.graph, node_pos)
+		neighbors: Generator[Any] = (self.graph.nodes[neighbor_pos] for neighbor_pos in neighbors)
 		neighbors: Generator[Agent | None] = map(lambda node: node['agent'] if 'agent' in node else None, neighbors)
 		neighbors: Generator[Agent] = filter(lambda agent: agent is not None, neighbors)
 		neighbors: list[Agent] = list(neighbors)
