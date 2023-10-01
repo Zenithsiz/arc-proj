@@ -2,14 +2,15 @@
 Graph
 """
 
-import random
 from typing import Any, Generator, Tuple
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy
 
-from arc_proj.agent import Agent
 import arc_proj.util as util
+from arc_proj.agent import Agent
+
 
 class Graph:
 	"""
@@ -45,15 +46,22 @@ class Graph:
 				self.graph.add_edge((x, y), (x + 1, y + 1))
 				self.graph.add_edge((x + 1, y), (x, y + 1))
 
-	def spread_agents(self, agent: Agent, count: int) -> None:
+	def fill_with_agents(self, empty_chance: float, agent_weights: dict[Agent, float]) -> None:
 		"""
-		Spreads `count` agents of type `agent` throughout the graph
+		Fills the graph with agents.
+
+		There is a `empty_change` chance of a node being empty.
+		Else, the weights in `agent_weights` are used to generate an agent
 		"""
 
-		for _ in range(count):
-			x = random.randint(0, self.size[0] - 1)
-			y = random.randint(0, self.size[1] - 1)
-			self.graph.nodes[(x, y)]['agent'] = agent
+		for node_pos in self.graph.nodes:
+			# If we're meant to be empty, continue to the next node
+			if numpy.random.random() < empty_chance:
+				continue
+
+			# Select a random agent
+			agent = numpy.random.choice(list(agent_weights.keys()), p=list(agent_weights.values()))
+			self.graph.nodes[node_pos]['agent'] = agent
 
 	def agent_satisfaction(self, node_pos: Tuple[int, int]) -> float | None:
 		"""
@@ -150,13 +158,13 @@ class Graph:
 		if len(removed_agents) == 0:
 			return True
 
-		# Else find a new spot for all new agents
+		# Else find all empty nodes and shuffle them
+		empty_nodes = [node for _, node in self.graph.nodes(data=True) if 'agent' not in node]
+
+		# And find a new spot for all removed agents
 		for agent in removed_agents:
-			while True:
-				x = random.randint(0, self.size[0] - 1)
-				y = random.randint(0, self.size[1] - 1)
-				if 'agent' not in self.graph.nodes[(x, y)]:
-					self.graph.nodes[(x, y)]['agent'] = agent
-					break
+			empty_node_idx = numpy.random.choice(len(empty_nodes))
+			empty_nodes[empty_node_idx]['agent'] = agent
+			del empty_nodes[empty_node_idx]
 
 		return False

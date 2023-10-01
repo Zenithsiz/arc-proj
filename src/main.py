@@ -3,21 +3,21 @@ ARC Project
 """
 
 import random
-from enum import Enum
 import time
+from enum import Enum
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy
 
 from arc_proj.agent import Agent
 from arc_proj.graph import Graph
 
 if __name__ == "__main__":
 	# Create the graph
-	graph = Graph([50, 50], satisfaction_threshold = 0.5)
-	random.seed(773)
-	graph.spread_agents(Agent.RED, 2000)
-	graph.spread_agents(Agent.BLUE, 2000)
+	graph = Graph([50, 50], satisfaction_threshold = 0.75)
+	numpy.random.seed(773)
+	graph.fill_with_agents(0.1, { Agent.RED: 0.5, Agent.BLUE: 0.5 })
 
 	# Display method
 	class DisplayMethod(Enum):
