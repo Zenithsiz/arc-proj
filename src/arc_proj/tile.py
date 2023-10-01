@@ -13,6 +13,12 @@ class Tile():
 	# Value, either a race or an empty tile
 	inner: Race | None
 
+	def __eq__(self, other):
+		if isinstance(other, Tile):
+			return self.inner == other.inner
+
+		return False
+
 	@staticmethod
 	def empty():
 		"""
@@ -27,6 +33,12 @@ class Tile():
 		"""
 		return Tile(race)
 
+	def is_empty(self) -> bool:
+		"""
+		Returns if this tile is empty
+		"""
+
+		return self.inner is None
 
 	def color(self) -> Tuple[int, int, int]:
 		"""
