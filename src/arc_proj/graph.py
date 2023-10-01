@@ -22,7 +22,13 @@ class Graph:
 	# Graph size
 	size: Tuple[int, int]
 
-	def __init__(self, graph_size: Tuple[int, int]) -> None:
+	# Current round
+	cur_round: int
+
+	# Satisfaction threshold
+	satisfaction_threshold: float
+
+	def __init__(self, graph_size: Tuple[int, int], satisfaction_threshold: float = 0.3) -> None:
 		"""
 		Initializes the graph with a size of `graph_size`
 		"""
@@ -30,6 +36,8 @@ class Graph:
 		# Create the graph and initialize it to empty
 		self.size = graph_size
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
+		self.cur_round = 0
+		self.satisfaction_threshold = satisfaction_threshold
 
 		# Then add the diagonal edges.
 		for y in range(graph_size[1] - 1):
@@ -112,3 +120,43 @@ class Graph:
 		ax = fig.add_subplot(1, 1, 1)
 		nx.draw_networkx_nodes(self.graph, pos=node_pos, ax=ax, node_color=node_colors, node_size=25, node_shape='s')
 		nx.draw_networkx_edges(self.graph, pos=node_pos, ax=ax)
+
+	def do_round(self) -> bool:
+		"""
+		Performs a single round.
+
+		Returns whether we've reached equilibrium
+		"""
+
+		# Go up a round
+		self.cur_round += 1
+
+		# Go through all agents, and remove the unhappy ones
+		removed_agents = []
+		for node_pos, node in self.graph.nodes(data=True):
+			agent = util.try_index_dict(node, 'agent')
+			if agent is None:
+				continue
+			agent: Agent
+
+			# Note: The agent exists, so this mustn't be `None`.
+			satisfaction: float = self.agent_satisfaction(node_pos)
+
+			if satisfaction < self.satisfaction_threshold:
+				removed_agents.append(agent)
+				del self.graph.nodes[node_pos]['agent']
+
+		# If we removed None, we've reached equilibrium
+		if len(removed_agents) == 0:
+			return True
+
+		# Else find a new spot for all new agents
+		for agent in removed_agents:
+			while True:
+				x = random.randint(0, self.size[0] - 1)
+				y = random.randint(0, self.size[1] - 1)
+				if 'agent' not in self.graph.nodes[(x, y)]:
+					self.graph.nodes[(x, y)]['agent'] = agent
+					break
+
+		return False

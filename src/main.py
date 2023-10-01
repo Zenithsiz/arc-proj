@@ -4,6 +4,7 @@ ARC Project
 
 import random
 from enum import Enum
+import time
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -13,10 +14,10 @@ from arc_proj.graph import Graph
 
 if __name__ == "__main__":
 	# Create the graph
-	graph = Graph([50, 50])
+	graph = Graph([50, 50], satisfaction_threshold = 0.5)
 	random.seed(773)
-	graph.spread_agents(Agent.RED, 1000)
-	graph.spread_agents(Agent.BLUE, 1000)
+	graph.spread_agents(Agent.RED, 2000)
+	graph.spread_agents(Agent.BLUE, 2000)
 
 	# Display method
 	class DisplayMethod(Enum):
@@ -33,24 +34,38 @@ if __name__ == "__main__":
 		# Create the figure
 		fig = plt.figure()
 
-		# Draw it using the display method
-		if display_method == DisplayMethod.GRAPH:
-			graph.draw(fig)
+		# And draw
+		while True:
+			# Draw it using the display method
+			if display_method == DisplayMethod.GRAPH:
+				graph.draw(fig)
 
-		elif display_method == DisplayMethod.GRID:
-			# Show all nodes
-			ax = fig.add_subplot(1, 2, 1)
-			ax.axis("off")
-			ax.imshow(graph.agent_img())
+			elif display_method == DisplayMethod.GRID:
+				# Show all nodes
+				ax = fig.add_subplot(1, 2, 1)
+				ax.axis("off")
+				ax.imshow(graph.agent_img())
 
-			# The the satisfaction of each one, in a separate plot
-			ax = fig.add_subplot(1, 2, 2)
-			ax.axis("off")
-			ax.imshow(graph.satisfaction_img())
+				# The the satisfaction of each one, in a separate plot
+				ax = fig.add_subplot(1, 2, 2)
+				ax.axis("off")
+				ax.imshow(graph.satisfaction_img())
 
-		else:
-			raise ValueError("Unknown display method")
+			else:
+				raise ValueError("Unknown display method")
 
-		# Finally show it
-		fig.tight_layout()
-		plt.show(block = True)
+			# Finally show it
+			fig.tight_layout()
+			fig.canvas.draw()
+			fig.canvas.flush_events()
+
+			# Then sleep for a bit
+			time.sleep(1.0 / 30.0)
+
+			# And update the graph
+			if graph.do_round():
+				print(f"Reached equilibrium after {graph.cur_round} round(s)")
+				break
+
+		# Finally, once we're done, block until the user closes the plots
+		plt.show(block=True)
