@@ -41,9 +41,6 @@ class Graph:
 	# Graph size
 	size: Tuple[int, int]
 
-	# Current round
-	cur_round: int
-
 	# Cache
 	cache: GraphCache
 
@@ -55,7 +52,6 @@ class Graph:
 		# Create the graph and initialize it to empty
 		self.size = graph_size
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
-		self.cur_round = 0
 		self.cache = GraphCache()
 
 		# Then add the diagonal edges.
@@ -256,11 +252,6 @@ class Graph:
 		Returns whether we've reached equilibrium
 		"""
 
-		print(f"Round #{self.cur_round+1}:")
-		print(f"\tUnsatisfied nodes: {len(self.cache.unsatisfied_nodes)}")
-		start_time = time.time()
-		self.cur_round += 1
-
 		# Remove all unsatisfied agents
 		removed_agents = self.remove_unsatisfied_agents()
 
@@ -274,8 +265,6 @@ class Graph:
 		# And find a new spot for all removed agents
 		for agent, node_pos in zip(removed_agents, empty_nodes):
 			self.add_agent(node_pos, agent)
-
-		print(f"\tTook {util.fmt_time(time.time() - start_time)}")
 
 		reached_equilibrium = len(self.cache.unsatisfied_nodes) == 0
 		if reached_equilibrium:

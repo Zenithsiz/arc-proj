@@ -10,6 +10,7 @@ import numpy
 
 from arc_proj.agent import Agent
 from arc_proj.graph import Graph
+import arc_proj.util as util
 
 if __name__ == "__main__":
 	# Create the graph
@@ -65,6 +66,7 @@ if __name__ == "__main__":
 			fig.canvas.flush_events()
 
 		# And draw
+		cur_round = 0
 		while True:
 			# Draw
 			draw()
@@ -72,12 +74,20 @@ if __name__ == "__main__":
 			# And update the graph
 			reached_equilibrium = False
 			for _ in range(rounds_per_display):
+				print(f"Round #{cur_round+1}:")
+				print(f"\tUnsatisfied nodes: {len(graph.cache.unsatisfied_nodes)}")
+				start_time = time.time()
+				cur_round += 1
+
 				reached_equilibrium |= graph.do_round()
+
+				print(f"\tTook {util.fmt_time(time.time() - start_time)}")
+
 				if reached_equilibrium:
 					break
 
 			if reached_equilibrium:
-				print(f"Reached equilibrium after {graph.cur_round} round(s)")
+				print(f"Reached equilibrium after {cur_round} round(s)")
 				draw()
 				break
 
