@@ -33,8 +33,11 @@ if __name__ == "__main__":
 		# Create the figure
 		fig = plt.figure()
 
-		# And draw
-		while True:
+		def draw():
+			"""
+			Draws the graph
+			"""
+
 			# Clear any previous figures
 			fig.clear()
 
@@ -61,8 +64,10 @@ if __name__ == "__main__":
 			fig.canvas.draw()
 			fig.canvas.flush_events()
 
-			# Then sleep for a bit
-			time.sleep(1.0 / 30.0)
+		# And draw
+		while True:
+			# Draw
+			draw()
 
 			# And update the graph
 			reached_equilibrium = False
@@ -73,6 +78,7 @@ if __name__ == "__main__":
 
 			if reached_equilibrium:
 				print(f"Reached equilibrium after {graph.cur_round} round(s)")
+				draw()
 				break
 
 		# Finally, once we're done, block until the user closes the plots
