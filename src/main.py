@@ -13,7 +13,7 @@ from arc_proj.graph import Graph
 
 if __name__ == "__main__":
 	# Create the graph
-	graph = Graph([50, 50], satisfaction_threshold = 0.5)
+	graph = Graph([80, 80], satisfaction_threshold = 0.5)
 	numpy.random.seed(773)
 	graph.fill_with_agents(0.05, { Agent.RED: 0.5, Agent.BLUE: 0.5 })
 
@@ -34,6 +34,9 @@ if __name__ == "__main__":
 
 		# And draw
 		while True:
+			# Clear any previous figures
+			fig.clear()
+
 			# Draw it using the display method
 			if display_method == DisplayMethod.GRAPH:
 				graph.draw(fig)
