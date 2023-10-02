@@ -21,6 +21,29 @@ def try_index_dict(container: Mapping[U, T], key: U) -> T | None:
 	else:
 		return None
 
+def fmt_time(s: float) -> str:
+	"""
+	Formats time in seconds in the closes unit.
+	"""
+	hours   = s // 3600
+	mins    = s // 60   - 60 * hours
+	seconds = s // 1    - 60 * mins  - 3600 * hours
+	milliseconds = 1e3 * s - 1e0 * int(seconds)
+	microseconds = 1e6 * s - 1e3 * int(milliseconds)
+	nanoseconds  = 1e9 * s - 1e6 * int(microseconds)
+
+	if hours > 0:
+		return f"{hours}h{mins}m{s%60:.3}s"
+	elif mins > 0:
+		return f"{mins}m{s%60:.3}s"
+	elif seconds > 0:
+		return f"{s:.3}s"
+	elif milliseconds > 0:
+		return f"{milliseconds:.3}ms"
+	elif microseconds > 0:
+		return f"{microseconds:.3}μs"
+	elif nanoseconds > 0:
+		return f"{nanoseconds:.3}ns"
 
 def reservoir_sample_set(s: set[T], size: int) -> list[T]:
 	"""

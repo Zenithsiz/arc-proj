@@ -4,6 +4,7 @@ Graph
 
 from dataclasses import dataclass
 import dataclasses
+import time
 from typing import Any, Generator, Tuple
 
 import matplotlib.pyplot as plt
@@ -19,6 +20,9 @@ class GraphCache:
 	"""
 	Cache for `Graph`
 	"""
+
+	# Unsatisfied nodes
+	unsatisfied_nodes: set[Tuple[int, int]] = dataclasses.field(default_factory=set)
 
 	# Empty nodes
 	empty_nodes: set[Tuple[int, int]] = dataclasses.field(default_factory=set)
@@ -78,6 +82,7 @@ class Graph:
 
 		# Then update the caches
 		self.cache.empty_nodes.remove(node_pos)
+		self.update_unsatisfied_nodes_cache(node_pos, skip_node=False)
 
 	def remove_agent(self, node_pos: Tuple[int, int]) -> Agent:
 		"""
@@ -92,9 +97,57 @@ class Graph:
 		del self.graph.nodes[node_pos]['agent']
 
 		# Then update the caches
+		# Note: `unsatisfied_nodes.remove(node_pos)` might not succeed, but we're fine
+		#       with that, we only want to remove it, if it exists anyway
 		self.cache.empty_nodes.add(node_pos)
+		self.cache.unsatisfied_nodes.remove(node_pos)
+		self.update_unsatisfied_nodes_cache(node_pos, skip_node=True)
 
 		return agent
+
+	def remove_unsatisfied_agents(self) -> list[Agent]:
+		"""
+		Removes all unsatisfied agents
+		"""
+
+		# Remove them all from the graph
+		agents = []
+		for node_pos in self.cache.unsatisfied_nodes:
+			agent = util.try_index_dict(self.graph.nodes[node_pos], 'agent')
+			assert(agent is not None)
+			del self.graph.nodes[node_pos]['agent']
+			agents.append(agent)
+
+		# Then mass-update the unsatisfied nodes
+		# Note: We need to update since some neighbor nodes might now be
+		#       unsatisfied from a similar agent leaving their neighborhood.
+		unsatisfied_nodes = list(self.cache.unsatisfied_nodes)
+		self.cache.unsatisfied_nodes.clear()
+		for node_pos in unsatisfied_nodes:
+			self.update_unsatisfied_nodes_cache(node_pos, skip_node=True)
+
+		# Finally add them to the empty nodes
+		self.cache.empty_nodes.update(unsatisfied_nodes)
+
+		return agents
+
+	def update_unsatisfied_nodes_cache(self, node_pos: Tuple[int, int], skip_node: bool):
+		"""
+		Updates the unsatisfied nodes cache for the node `node_pos` and neighbors.
+
+		If `skip_node`, the node itself won't be updated. This is useful for
+		updating nodes that have become empty
+		"""
+
+		# Check the current agent
+		if not skip_node and self.agent_satisfaction(node_pos) < self.satisfaction_threshold:
+			self.cache.unsatisfied_nodes.add(node_pos)
+
+		# Then check all neighbors
+		for neighbor in nx.neighbors(self.graph, node_pos):
+			neighbor_satisfaction = self.agent_satisfaction(neighbor)
+			if neighbor_satisfaction is not None and neighbor_satisfaction < self.satisfaction_threshold:
+				self.cache.unsatisfied_nodes.add(neighbor)
 
 	def fill_with_agents(self, empty_chance: float, agent_weights: dict[Agent, float]) -> None:
 		"""
@@ -186,23 +239,13 @@ class Graph:
 		Returns whether we've reached equilibrium
 		"""
 
-		# Go up a round
+		print(f"Round #{self.cur_round+1}:")
+		print(f"\tUnsatisfied nodes: {len(self.cache.unsatisfied_nodes)}")
+		start_time = time.time()
 		self.cur_round += 1
 
-		# Go through all agents, and remove the unhappy ones
-		removed_agents = []
-		for node_pos, node in self.graph.nodes(data=True):
-			agent = util.try_index_dict(node, 'agent')
-			if agent is None:
-				continue
-			agent: Agent
-
-			# Note: The agent exists, so this mustn't be `None`.
-			satisfaction: float = self.agent_satisfaction(node_pos)
-
-			if satisfaction < self.satisfaction_threshold:
-				removed_agents.append(self.remove_agent(node_pos))
-
+		# Remove all unsatisfied agents
+		removed_agents = self.remove_unsatisfied_agents()
 
 		# If we removed None, we've reached equilibrium
 		if len(removed_agents) == 0:
@@ -217,5 +260,7 @@ class Graph:
 		# And find a new spot for all removed agents
 		for agent, node_pos in zip(removed_agents, empty_nodes):
 			self.add_agent(node_pos, agent)
+
+		print(f"\tTook {util.fmt_time(time.time() - start_time)}")
 
 		return False
