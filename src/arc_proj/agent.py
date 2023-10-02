@@ -14,11 +14,20 @@ class Agent(Enum):
 	RED = 1
 	BLUE = 2
 
+	def threshold(self) -> float:
+		"""
+		Returns the satisfaction threshold for this agent
+		"""
+
+		match self:
+			case Agent.RED:     return 0.5
+			case Agent.BLUE:    return 0.35
+
 	def color(self) -> Tuple[int, int, int]:
 		"""
 		Returns the color of this agent
 		"""
-		if self == Agent.RED:
-			return [1.0, 0.0, 0.0]
-		elif self == Agent.BLUE:
-			return [0.0, 0.0, 1.0]
+
+		match self:
+			case Agent.RED:    return [1.0, 0.0, 0.0]
+			case Agent.BLUE:   return [0.0, 0.0, 1.0]

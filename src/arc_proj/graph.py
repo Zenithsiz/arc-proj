@@ -44,13 +44,10 @@ class Graph:
 	# Current round
 	cur_round: int
 
-	# Satisfaction threshold
-	satisfaction_threshold: float
-
 	# Cache
 	cache: GraphCache
 
-	def __init__(self, graph_size: Tuple[int, int], satisfaction_threshold: float = 0.3) -> None:
+	def __init__(self, graph_size: Tuple[int, int]) -> None:
 		"""
 		Initializes the graph with a size of `graph_size`
 		"""
@@ -59,7 +56,6 @@ class Graph:
 		self.size = graph_size
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
 		self.cur_round = 0
-		self.satisfaction_threshold = satisfaction_threshold
 		self.cache = GraphCache()
 
 		# Then add the diagonal edges.
@@ -84,7 +80,7 @@ class Graph:
 
 		# Then update the caches
 		self.cache.empty_nodes.remove(node_pos)
-		self.update_unsatisfied_nodes_cache(node_pos, skip_node=False)
+		self.update_unsatisfied_nodes_cache(node_pos)
 
 	def remove_agent(self, node_pos: NodePos) -> Agent:
 		"""
@@ -126,29 +122,25 @@ class Graph:
 		unsatisfied_nodes = list(self.cache.unsatisfied_nodes)
 		self.cache.unsatisfied_nodes.clear()
 		for node_pos in unsatisfied_nodes:
-			self.update_unsatisfied_nodes_cache(node_pos, skip_node=True)
+			self.update_unsatisfied_nodes_cache(node_pos)
 
 		# Finally add them to the empty nodes
 		self.cache.empty_nodes.update(unsatisfied_nodes)
 
 		return agents
 
-	def update_unsatisfied_nodes_cache(self, node_pos: NodePos, skip_node: bool):
+	def update_unsatisfied_nodes_cache(self, node_pos: NodePos):
 		"""
 		Updates the unsatisfied nodes cache for the node `node_pos` and neighbors.
-
-		If `skip_node`, the node itself won't be updated. This is useful for
-		updating nodes that have become empty
 		"""
 
 		# Check the current agent
-		if not skip_node and self.agent_satisfaction(node_pos) < self.satisfaction_threshold:
+		if self.agent_satisfied(node_pos) == False:
 			self.cache.unsatisfied_nodes.add(node_pos)
 
 		# Then check all neighbors
 		for neighbor in nx.neighbors(self.graph, node_pos):
-			neighbor_satisfaction = self.agent_satisfaction(neighbor)
-			if neighbor_satisfaction is not None and neighbor_satisfaction < self.satisfaction_threshold:
+			if self.agent_satisfied(neighbor) == False:
 				self.cache.unsatisfied_nodes.add(neighbor)
 
 	def fill_with_agents(self, empty_chance: float, agent_weights: dict[Agent, float]) -> None:
@@ -204,6 +196,22 @@ class Graph:
 		# Else their satisfaction is the number of similar agents within their non-empty neighbors
 		return sum(agent == neighbor for neighbor in neighbors) / len(neighbors)
 
+	def agent_satisfied(self, node_pos: NodePos) -> bool | None:
+		"""
+		Returns if an agent is satisfied
+		"""
+
+		# Get the satisfaction
+		satisfaction = self.agent_satisfaction(node_pos)
+		if satisfaction is None:
+			return None
+
+		# Then check with the agent
+		# Note: Since `satisfaction` isn't `None`, we know it must exist
+		agent: Agent = self.graph.nodes[node_pos]['agent']
+
+		return satisfaction >= agent.threshold()
+
 	def agent_img(self) -> list[list[Tuple[int, int, int]]]:
 		"""
 		Returns an image of all agents in the graph
@@ -220,9 +228,10 @@ class Graph:
 		Returns an image of the satisfaction of all agents in the graph
 		"""
 		img = [[(0, 0, 0) for _ in range(self.size[0])] for _ in range(self.size[1])]
-		for node_pos in self.graph.nodes():
+		for node_pos, node in self.graph.nodes(data=True):
 			satisfaction = self.agent_satisfaction(node_pos)
-			img[node_pos[1]][node_pos[0]] = [satisfaction, 0.0, 0.0] if satisfaction is not None else [0.0, 0.0, 0.0]
+			satisfied = self.agent_satisfied(node_pos)
+			img[node_pos[1]][node_pos[0]] = [satisfaction, 0.0, satisfied] if satisfaction is not None else [1.0, 0.0, 1.0]
 
 		return img
 
@@ -271,7 +280,7 @@ class Graph:
 		reached_equilibrium = len(self.cache.unsatisfied_nodes) == 0
 		if reached_equilibrium:
 			for node_pos in self.graph.nodes():
-				satisfaction = self.agent_satisfaction(node_pos)
-				assert satisfaction is None or satisfaction >= self.satisfaction_threshold, f"Node {node_pos} wasn't satisfied after reaching equilibrium"
+				satisfied = self.agent_satisfied(node_pos)
+				assert satisfied is None or satisfied, "A"
 
 		return reached_equilibrium
