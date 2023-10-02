@@ -79,7 +79,7 @@ class Graph:
 		"""
 
 		# Set it on the graph
-		assert('agent' not in self.graph.nodes[node_pos])
+		assert 'agent' not in self.graph.nodes[node_pos], "Node position had agent"
 		self.graph.nodes[node_pos]['agent'] = agent
 
 		# Then update the caches
@@ -95,7 +95,7 @@ class Graph:
 
 		# Remove it from the graph
 		agent = util.try_index_dict(self.graph.nodes[node_pos], 'agent')
-		assert(agent is not None)
+		assert agent is not None, "Node position did not have agent"
 		del self.graph.nodes[node_pos]['agent']
 
 		# Then update the caches
@@ -116,7 +116,7 @@ class Graph:
 		agents = []
 		for node_pos in self.cache.unsatisfied_nodes:
 			agent = util.try_index_dict(self.graph.nodes[node_pos], 'agent')
-			assert(agent is not None)
+			assert agent is not None, "Node position did not have agent"
 			del self.graph.nodes[node_pos]['agent']
 			agents.append(agent)
 
@@ -268,4 +268,10 @@ class Graph:
 
 		print(f"\tTook {util.fmt_time(time.time() - start_time)}")
 
-		return len(self.cache.unsatisfied_nodes) == 0
+		reached_equilibrium = len(self.cache.unsatisfied_nodes) == 0
+		if reached_equilibrium:
+			for node_pos in self.graph.nodes():
+				satisfaction = self.agent_satisfaction(node_pos)
+				assert satisfaction is None or satisfaction >= self.satisfaction_threshold, f"Node {node_pos} wasn't satisfied after reaching equilibrium"
+
+		return reached_equilibrium

@@ -25,7 +25,7 @@ def fmt_time(s: float) -> str:
 	"""
 	Formats time in seconds in the closest unit.
 	"""
-	assert(s >= 0)
+	assert s >= 0, "Seconds must be positive"
 
 	hours   = s // 3600
 	mins    = s // 60   - 60 * hours
