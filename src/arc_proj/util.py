@@ -2,10 +2,8 @@
 Utilities
 """
 
-import math
-from typing import TypeVar, Mapping
+from typing import Mapping, TypeVar
 
-import numpy
 
 T = TypeVar('T')
 U = TypeVar('U')

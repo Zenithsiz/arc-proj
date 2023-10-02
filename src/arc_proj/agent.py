@@ -5,6 +5,7 @@ Agent
 from enum import Enum
 from typing import Tuple
 
+
 class Agent(Enum):
 	"""
 	An agent within the graph.

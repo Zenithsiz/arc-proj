@@ -8,9 +8,9 @@ from enum import Enum
 import matplotlib.pyplot as plt
 import numpy
 
+import arc_proj.util as util
 from arc_proj.agent import Agent
 from arc_proj.graph import Graph
-import arc_proj.util as util
 
 if __name__ == "__main__":
 	# Create the graph

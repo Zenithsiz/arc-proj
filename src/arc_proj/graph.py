@@ -2,9 +2,8 @@
 Graph
 """
 
-from dataclasses import dataclass
 import dataclasses
-import time
+from dataclasses import dataclass
 from typing import Any, Generator, Tuple
 
 import matplotlib.pyplot as plt
