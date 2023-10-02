@@ -33,17 +33,17 @@ def fmt_time(s: float) -> str:
 	nanoseconds  = 1e9 * s - 1e6 * int(microseconds)
 
 	if hours > 0:
-		return f"{hours}h{mins}m{s%60:.3}s"
+		return f"{hours}h{mins}m{s%60:.2f}s"
 	elif mins > 0:
-		return f"{mins}m{s%60:.3}s"
+		return f"{mins}m{s%60:.2f}s"
 	elif seconds > 0:
-		return f"{s:.3}s"
+		return f"{s:.2f}s"
 	elif milliseconds > 0:
-		return f"{milliseconds:.3}ms"
+		return f"{milliseconds:.2f}ms"
 	elif microseconds > 0:
-		return f"{microseconds:.3}μs"
+		return f"{microseconds:.2f}μs"
 	elif nanoseconds > 0:
-		return f"{nanoseconds:.3}ns"
+		return f"{nanoseconds:.2f}ns"
 
 def reservoir_sample_set(s: set[T], size: int) -> list[T]:
 	"""
