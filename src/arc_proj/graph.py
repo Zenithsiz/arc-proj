@@ -182,21 +182,14 @@ class Graph:
 		neighbors: Generator[Agent] = filter(lambda agent: agent is not None, neighbors)
 		neighbors: list[Agent] = list(neighbors)
 
-		# If there are none, we are satisfied
-		# Note: The simulation in `http://nifty.stanford.edu/2014/mccown-schelling-model-segregation/` works like
-		#       this: When setting `empty = 90%`, some agents are empty but still count as satisfied.
-		if len(neighbors) == 0:
-			return 1.0
-
-		# Else their satisfaction is the number of similar agents within their non-empty neighbors
-		return sum(agent == neighbor for neighbor in neighbors) / len(neighbors)
+		return agent.satisfaction(neighbors)
 
 	def agent_satisfied(self, node_pos: NodePos) -> bool | None:
 		"""
 		Returns if an agent is satisfied
 		"""
 
-		# Get the satisfaction
+		# Get the satisfaction of the agent
 		satisfaction = self.agent_satisfaction(node_pos)
 		if satisfaction is None:
 			return None
