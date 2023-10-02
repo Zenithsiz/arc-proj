@@ -249,10 +249,6 @@ class Graph:
 		# Remove all unsatisfied agents
 		removed_agents = self.remove_unsatisfied_agents()
 
-		# If we removed None, we've reached equilibrium
-		if len(removed_agents) == 0:
-			return True
-
 		# Then sample some empty nodes
 		# Note: Unfortunately this is faster than reservoir sampling with
 		#       the set, as that's still `O(max(n, k))` due to not being able to
@@ -266,4 +262,4 @@ class Graph:
 
 		print(f"\tTook {util.fmt_time(time.time() - start_time)}")
 
-		return False
+		return len(self.cache.unsatisfied_nodes) == 0
