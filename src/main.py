@@ -75,13 +75,15 @@ if __name__ == "__main__":
 			reached_equilibrium = False
 			for _ in range(rounds_per_display):
 				print(f"Round #{cur_round+1}:")
-				print(f"\tUnsatisfied nodes: {len(graph.cache.unsatisfied_nodes)}")
+				unsatisfied_nodes = len(graph.cache.unsatisfied_nodes)
+				print(f"\tUnsatisfied nodes: {unsatisfied_nodes}")
 				start_time = time.time()
 				cur_round += 1
 
 				reached_equilibrium |= graph.do_round()
 
-				print(f"\tTook {util.fmt_time(time.time() - start_time)}")
+				round_duration = time.time() - start_time
+				print(f"\tTook {util.fmt_time(round_duration)} ({util.fmt_time(round_duration / unsatisfied_nodes if unsatisfied_nodes != 0 else 0.0)}/agent)")
 
 				if reached_equilibrium:
 					break
