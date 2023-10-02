@@ -26,6 +26,7 @@ if __name__ == "__main__":
 		GRID = 2
 
 	display_method = DisplayMethod.GRID
+	rounds_per_display = 1
 
 	# Visualize graph
 	with plt.ion():
@@ -64,7 +65,11 @@ if __name__ == "__main__":
 			time.sleep(1.0 / 30.0)
 
 			# And update the graph
-			if graph.do_round():
+			reached_equilibrium = False
+			for _ in range(rounds_per_display):
+				reached_equilibrium |= graph.do_round()
+
+			if reached_equilibrium:
 				print(f"Reached equilibrium after {graph.cur_round} round(s)")
 				break
 
