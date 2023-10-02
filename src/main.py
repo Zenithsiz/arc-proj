@@ -2,12 +2,10 @@
 ARC Project
 """
 
-import random
 import time
 from enum import Enum
 
 import matplotlib.pyplot as plt
-import networkx as nx
 import numpy
 
 from arc_proj.agent import Agent
@@ -15,9 +13,9 @@ from arc_proj.graph import Graph
 
 if __name__ == "__main__":
 	# Create the graph
-	graph = Graph([50, 50], satisfaction_threshold = 0.75)
+	graph = Graph([50, 50], satisfaction_threshold = 0.5)
 	numpy.random.seed(773)
-	graph.fill_with_agents(0.1, { Agent.RED: 0.5, Agent.BLUE: 0.5 })
+	graph.fill_with_agents(0.05, { Agent.RED: 0.5, Agent.BLUE: 0.5 })
 
 	# Display method
 	class DisplayMethod(Enum):

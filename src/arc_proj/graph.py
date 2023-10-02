@@ -2,6 +2,8 @@
 Graph
 """
 
+from dataclasses import dataclass
+import dataclasses
 from typing import Any, Generator, Tuple
 
 import matplotlib.pyplot as plt
@@ -10,6 +12,16 @@ import numpy
 
 import arc_proj.util as util
 from arc_proj.agent import Agent
+
+
+@dataclass
+class GraphCache:
+	"""
+	Cache for `Graph`
+	"""
+
+	# Empty nodes
+	empty_nodes: set[Tuple[int, int]] = dataclasses.field(default_factory=set)
 
 
 class Graph:
@@ -29,6 +41,9 @@ class Graph:
 	# Satisfaction threshold
 	satisfaction_threshold: float
 
+	# Cache
+	cache: GraphCache
+
 	def __init__(self, graph_size: Tuple[int, int], satisfaction_threshold: float = 0.3) -> None:
 		"""
 		Initializes the graph with a size of `graph_size`
@@ -39,12 +54,47 @@ class Graph:
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
 		self.cur_round = 0
 		self.satisfaction_threshold = satisfaction_threshold
+		self.cache = GraphCache()
 
 		# Then add the diagonal edges.
 		for y in range(graph_size[1] - 1):
 			for x in range(graph_size[0] - 1):
 				self.graph.add_edge((x, y), (x + 1, y + 1))
 				self.graph.add_edge((x + 1, y), (x, y + 1))
+
+		# Initialize caches
+		self.cache.empty_nodes = set(node_pos for node_pos in self.graph.nodes)
+
+	def add_agent(self, node_pos: Tuple[int, int], agent: Agent):
+		"""
+		Adds an agent `agent` at node `node_pos`.
+
+		The node at `node_pos` *must* have been empty
+		"""
+
+		# Set it on the graph
+		assert('agent' not in self.graph.nodes[node_pos])
+		self.graph.nodes[node_pos]['agent'] = agent
+
+		# Then update the caches
+		self.cache.empty_nodes.remove(node_pos)
+
+	def remove_agent(self, node_pos: Tuple[int, int]) -> Agent:
+		"""
+		Removes an agent at node `node_pos`.
+
+		The node at `node_pos` *must* have an agent
+		"""
+
+		# Remove it from the graph
+		agent = util.try_index_dict(self.graph.nodes[node_pos], 'agent')
+		assert(agent is not None)
+		del self.graph.nodes[node_pos]['agent']
+
+		# Then update the caches
+		self.cache.empty_nodes.add(node_pos)
+
+		return agent
 
 	def fill_with_agents(self, empty_chance: float, agent_weights: dict[Agent, float]) -> None:
 		"""
@@ -61,7 +111,7 @@ class Graph:
 
 			# Select a random agent
 			agent = numpy.random.choice(list(agent_weights.keys()), p=list(agent_weights.values()))
-			self.graph.nodes[node_pos]['agent'] = agent
+			self.add_agent(node_pos, agent)
 
 	def agent_satisfaction(self, node_pos: Tuple[int, int]) -> float | None:
 		"""
@@ -151,20 +201,21 @@ class Graph:
 			satisfaction: float = self.agent_satisfaction(node_pos)
 
 			if satisfaction < self.satisfaction_threshold:
-				removed_agents.append(agent)
-				del self.graph.nodes[node_pos]['agent']
+				removed_agents.append(self.remove_agent(node_pos))
+
 
 		# If we removed None, we've reached equilibrium
 		if len(removed_agents) == 0:
 			return True
 
-		# Else find all empty nodes and shuffle them
-		empty_nodes = [node for _, node in self.graph.nodes(data=True) if 'agent' not in node]
+		# Else sample empty nodes for all the removed agents
+		# Note: We know that `self.cache.empty_nodes` has at least `len(removed_agents)` elements,
+		#       given that we just removed all these agents.
+		assert(len(self.cache.empty_nodes) >= len(removed_agents))
+		empty_nodes = util.reservoir_sample_set(self.cache.empty_nodes, len(removed_agents))
 
 		# And find a new spot for all removed agents
-		for agent in removed_agents:
-			empty_node_idx = numpy.random.choice(len(empty_nodes))
-			empty_nodes[empty_node_idx]['agent'] = agent
-			del empty_nodes[empty_node_idx]
+		for agent, node_pos in zip(removed_agents, empty_nodes):
+			self.add_agent(node_pos, agent)
 
 		return False
