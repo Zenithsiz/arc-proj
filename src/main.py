@@ -15,7 +15,7 @@ if __name__ == "__main__":
 	# Create the graph
 	graph = Graph([80, 80], satisfaction_threshold = 0.5)
 	numpy.random.seed(773)
-	graph.fill_with_agents(0.05, { Agent.RED: 0.5, Agent.BLUE: 0.5 })
+	graph.fill_with_agents(0.05, { Agent.RED: 1, Agent.BLUE: 1 })
 
 	# Display method
 	class DisplayMethod(Enum):

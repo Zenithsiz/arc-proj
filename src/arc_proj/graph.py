@@ -159,6 +159,12 @@ class Graph:
 		Else, the weights in `agent_weights` are used to generate an agent
 		"""
 
+		# Normalize the weights to sum to 1
+		weights_sum = sum(agent_weights.values())
+		agent_weights = { agent: weight / weights_sum for agent, weight in agent_weights.items() }
+
+		# Then for each node, select either empty or a random agent
+		# TODO: Maybe optimize cases when `empty_cache` is high?
 		for node_pos in self.graph.nodes:
 			# If we're meant to be empty, continue to the next node
 			if numpy.random.random() < empty_chance:
