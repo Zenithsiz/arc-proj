@@ -251,11 +251,12 @@ class Graph:
 		if len(removed_agents) == 0:
 			return True
 
-		# Else sample empty nodes for all the removed agents
-		# Note: We know that `self.cache.empty_nodes` has at least `len(removed_agents)` elements,
-		#       given that we just removed all these agents.
-		assert(len(self.cache.empty_nodes) >= len(removed_agents))
-		empty_nodes = util.reservoir_sample_set(self.cache.empty_nodes, len(removed_agents))
+		# Then sample some empty nodes
+		# Note: Unfortunately this is faster than reservoir sampling with
+		#       the set, as that's still `O(max(n, k))` due to not being able to
+		#       efficiently advance the iterator by a delta.
+		empty_nodes = list(self.cache.empty_nodes)
+		numpy.random.shuffle(empty_nodes)
 
 		# And find a new spot for all removed agents
 		for agent, node_pos in zip(removed_agents, empty_nodes):
