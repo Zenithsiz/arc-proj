@@ -68,6 +68,8 @@ if __name__ == "__main__":
 			reached_equilibrium = False
 			for _ in range(rounds_per_display):
 				reached_equilibrium |= graph.do_round()
+				if reached_equilibrium:
+					break
 
 			if reached_equilibrium:
 				print(f"Reached equilibrium after {graph.cur_round} round(s)")
