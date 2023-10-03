@@ -206,8 +206,8 @@ class Graph:
 		"""
 		img = [[(0, 0, 0) for _ in range(self.size[0])] for _ in range(self.size[1])]
 		for node_pos, node in self.graph.nodes(data = True):
-			node = util.try_index_dict(node, 'agent')
-			img[node_pos[1]][node_pos[0]] = node.color() if node is not None else [0.5, 0.5, 0.5]
+			agent: Agent | None = util.try_index_dict(node, 'agent')
+			img[node_pos[1]][node_pos[0]] = agent.color() if agent is not None else [0.5, 0.5, 0.5]
 
 		return img
 
