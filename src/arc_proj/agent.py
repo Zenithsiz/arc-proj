@@ -36,7 +36,7 @@ class Agent(Enum):
 
 		match self:
 			case Agent.RED:     return 0.5
-			case Agent.BLUE:    return 0.35
+			case Agent.BLUE:    return 0.5
 
 	def color(self) -> Tuple[int, int, int]:
 		"""

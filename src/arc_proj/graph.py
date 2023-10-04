@@ -92,11 +92,8 @@ class Graph:
 		del node['agent']
 
 		# Then update the caches
-		# Note: `unsatisfied_nodes.discard(node_pos)` might not succeed, but we're fine
-		#       with that, we only want to remove it, if it exists anyway
 		self.cache.empty_nodes.add(node_pos)
-		self.cache.unsatisfied_nodes.discard(node_pos)
-		self.update_unsatisfied_nodes_cache(node_pos, skip_node=True)
+		self.update_unsatisfied_nodes_cache(node_pos)
 
 		return agent
 
@@ -132,14 +129,15 @@ class Graph:
 		Updates the unsatisfied nodes cache for the node `node_pos` and neighbors.
 		"""
 
-		# Check the current agent
-		if self.agent_satisfied(node_pos) == False:
-			self.cache.unsatisfied_nodes.add(node_pos)
+		match self.agent_satisfied(node_pos):
+			case True | None: self.cache.unsatisfied_nodes.discard(node_pos)
+			case False:       self.cache.unsatisfied_nodes.add    (node_pos)
 
 		# Then check all neighbors
-		for neighbor in nx.neighbors(self.graph, node_pos):
-			if self.agent_satisfied(neighbor) == False:
-				self.cache.unsatisfied_nodes.add(neighbor)
+		for neighbor_pos in nx.neighbors(self.graph, node_pos):
+			match self.agent_satisfied(neighbor_pos):
+				case True | None: self.cache.unsatisfied_nodes.discard(neighbor_pos)
+				case False:       self.cache.unsatisfied_nodes.add    (neighbor_pos)
 
 	def fill_with_agents(self, empty_chance: float, agent_weights: dict[Agent, float]) -> None:
 		"""
@@ -246,6 +244,12 @@ class Graph:
 
 		Returns whether we've reached equilibrium
 		"""
+
+		# Sanity check: Ensure all unsatisfied agents are actually
+		#               unsatisfied
+		if __debug__:
+			for node_pos in self.cache.unsatisfied_nodes:
+				assert not self.agent_satisfied(node_pos), f"Node {node_pos} was on unsatisfied list, but was satisfied"
 
 		# Remove all unsatisfied agents
 		removed_agents = self.remove_unsatisfied_agents()
