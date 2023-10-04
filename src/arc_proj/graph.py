@@ -47,13 +47,16 @@ class Graph:
 	# Graph size
 	size: Tuple[int, int]
 
+	# Random state
+	random_state: numpy.random.RandomState
+
 	# Cache
 	cache: GraphCache
 
 	# Debug
 	debug: DebugOptions
 
-	def __init__(self, graph_size: Tuple[int, int]) -> None:
+	def __init__(self, graph_size: Tuple[int, int], seed: int) -> None:
 		"""
 		Initializes the graph with a size of `graph_size`
 		"""
@@ -61,6 +64,7 @@ class Graph:
 		# Create the graph and initialize it to empty
 		self.size = graph_size
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
+		self.random_state = numpy.random.RandomState(seed)
 		self.debug = DebugOptions(
 			sanity_check_caches=False
 		)
@@ -170,11 +174,11 @@ class Graph:
 		# TODO: Maybe optimize cases when `empty_cache` is high?
 		for node_pos in self.graph.nodes:
 			# If we're meant to be empty, continue to the next node
-			if numpy.random.random() < empty_chance:
+			if self.random_state.random() < empty_chance:
 				continue
 
 			# Select a random agent
-			agent = numpy.random.choice(list(agent_weights.keys()), p=list(agent_weights.values()))
+			agent = self.random_state.choice(list(agent_weights.keys()), p=list(agent_weights.values()))
 			self.add_agent(node_pos, agent)
 
 	def agent_satisfaction(self, node_pos: NodePos) -> float | None:
@@ -281,7 +285,7 @@ class Graph:
 		#       the set, as that's still `O(max(n, k))` due to not being able to
 		#       efficiently advance the iterator by a delta.
 		empty_nodes = list(self.cache.empty_nodes)
-		numpy.random.shuffle(empty_nodes)
+		self.random_state.shuffle(empty_nodes)
 
 		# And find a new spot for all removed agents
 		for agent, node_pos in zip(removed_agents, empty_nodes):

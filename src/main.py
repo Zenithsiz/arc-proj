@@ -14,8 +14,7 @@ from arc_proj.graph import Graph
 
 if __name__ == "__main__":
 	# Create the graph
-	graph = Graph([80, 80])
-	numpy.random.seed(773)
+	graph = Graph(graph_size=[80, 80], seed=773)
 	graph.fill_with_agents(0.1, { Agent.RED: 1, Agent.BLUE: 1 })
 
 	# Display method
