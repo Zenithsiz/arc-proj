@@ -297,7 +297,7 @@ class Graph:
 		# Sanity check: Ensure the caches are valid
 		# Note: This is pretty slow normally, so we only enable it
 		#       on debug and when explicitly requested
-		if __debug__ and self.debug.sanity_check_caches:
+		if self.debug.sanity_check_caches:
 			self.update_unsatisfied_nodes_cache_multiple(self.graph.nodes)
 			for node_pos in self.graph.nodes:
 				match self.agent_satisfied(node_pos):
@@ -317,7 +317,7 @@ class Graph:
 		# We've reached equilibrium if there are no unsatisfied nodes
 		# Note: If enabled, we also sanity check that all nodes are satisfied.
 		reached_equilibrium = len(self.cache.unsatisfied_nodes) == 0
-		if __debug__ and self.debug.check_equilibrium and reached_equilibrium:
+		if self.debug.check_equilibrium and reached_equilibrium:
 			for node_pos in self.graph.nodes:
 				satisfied = self.agent_satisfied(node_pos)
 				assert satisfied is None or satisfied, f"Node {node_pos} wasn't satisfied after reaching equilibrium"
