@@ -162,7 +162,7 @@ class Graph:
 			case False:       self.cache.unsatisfied_nodes.add    (node_pos)
 
 		# Then check all neighbors
-		for neighbor_pos in nx.neighbors(self.graph, node_pos):
+		for neighbor_pos in self.graph.adj[node_pos]:
 			match self.agent_satisfied(neighbor_pos):
 				case True | None: self.cache.unsatisfied_nodes.discard(neighbor_pos)
 				case False:       self.cache.unsatisfied_nodes.add    (neighbor_pos)
@@ -205,7 +205,7 @@ class Graph:
 		agent: Agent
 
 		# Else count all neighbors that aren't empty
-		neighbors = nx.neighbors(self.graph, node_pos)
+		neighbors = self.graph.adj[node_pos]
 		neighbors: Generator[Any] = (self.graph.nodes[neighbor_pos] for neighbor_pos in neighbors)
 		neighbors: Generator[Agent | None] = map(lambda node: util.try_index_dict(node, 'agent'), neighbors)
 		neighbors: Generator[Agent] = filter(lambda agent: agent is not None, neighbors)
