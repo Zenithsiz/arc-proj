@@ -4,7 +4,7 @@ Graph
 
 from dataclasses import dataclass
 import itertools
-from typing import Any, Generator, Tuple
+from typing import Any, Generator, Iterable, Tuple
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -114,8 +114,7 @@ class Graph:
 		assert len(agents_cache) == 0, f"Destination nodes overlapped or destination node already had an agent: {agents_cache}"
 
 		# Then mass-update the source and destination nodes
-		for src_pos in set(itertools.chain(nodes_pos.keys(), nodes_pos.values())):
-			self.update_unsatisfied_nodes_cache(src_pos)
+		self.update_unsatisfied_nodes_cache_multiple(itertools.chain(nodes_pos.keys(), nodes_pos.values()))
 
 	def add_agent(self, node_pos: NodePos, agent: Agent):
 		"""
@@ -152,20 +151,33 @@ class Graph:
 
 		return agent
 
+	def update_unsatisfied_nodes_cache_multiple(self, nodes: Iterable[NodePos]):
+		"""
+		Updates the unsatisfied nodes cache for the nodes in `nodes` and neighbors.
+		"""
+
+		# Get all nodes and neighbors
+		all_nodes = set()
+		for node_pos in nodes:
+			all_nodes.add(node_pos)
+			all_nodes.update(self.graph.adj[node_pos])
+
+		# Then check each one
+		for node_pos in all_nodes:
+			match self.agent_satisfied(node_pos):
+				case True | None: self.cache.unsatisfied_nodes.discard(node_pos)
+				case False:       self.cache.unsatisfied_nodes.add    (node_pos)
+
 	def update_unsatisfied_nodes_cache(self, node_pos: NodePos):
 		"""
 		Updates the unsatisfied nodes cache for the node `node_pos` and neighbors.
 		"""
 
-		match self.agent_satisfied(node_pos):
-			case True | None: self.cache.unsatisfied_nodes.discard(node_pos)
-			case False:       self.cache.unsatisfied_nodes.add    (node_pos)
-
-		# Then check all neighbors
-		for neighbor_pos in self.graph.adj[node_pos]:
-			match self.agent_satisfied(neighbor_pos):
-				case True | None: self.cache.unsatisfied_nodes.discard(neighbor_pos)
-				case False:       self.cache.unsatisfied_nodes.add    (neighbor_pos)
+		all_nodes = [node_pos, *self.graph.adj[node_pos]]
+		for node_pos in all_nodes:
+			match self.agent_satisfied(node_pos):
+				case True | None: self.cache.unsatisfied_nodes.discard(node_pos)
+				case False:       self.cache.unsatisfied_nodes.add    (node_pos)
 
 	def fill_with_agents(self, empty_chance: float, agent_weights: dict[Agent, float]) -> None:
 		"""
@@ -277,8 +289,8 @@ class Graph:
 		# Note: This is pretty slow normally, so we only enable it
 		#       on debug and when explicitly requested
 		if __debug__ and self.debug.sanity_check_caches:
+			self.update_unsatisfied_nodes_cache_multiple(self.graph.nodes)
 			for node_pos in self.graph.nodes:
-				self.update_unsatisfied_nodes_cache(node_pos)
 				match self.agent_satisfied(node_pos):
 					case True | None: assert node_pos not in self.cache.unsatisfied_nodes, f"Node {node_pos} was satisfied, but present in unsatisfied cache"
 					case False      : assert node_pos     in self.cache.unsatisfied_nodes, f"Node {node_pos} wasn't satisfied, but not present in unsatisfied cache"
