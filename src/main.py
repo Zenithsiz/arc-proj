@@ -6,7 +6,6 @@ import time
 from enum import Enum
 
 import matplotlib.pyplot as plt
-import numpy
 
 import arc_proj.util as util
 from arc_proj.agent import Agent
@@ -14,8 +13,16 @@ from arc_proj.graph import Graph
 
 if __name__ == "__main__":
 	# Create the graph
-	graph = Graph(graph_size=[80, 80], seed=773)
+	start_time = time.time()
+
+	print("Creation:")
+	graph_size = [80, 80]
+	graph = Graph(graph_size=graph_size, seed=773)
 	graph.fill_with_agents(0.1, { Agent.RED: 1, Agent.BLUE: 1 })
+
+	creation_duration = time.time() - start_time
+	print(f"\tTook {util.fmt_time(creation_duration)} ({util.fmt_time(creation_duration / (graph_size[0] * graph_size[1]))}/node)")
+
 
 	# Display method
 	class DisplayMethod(Enum):
