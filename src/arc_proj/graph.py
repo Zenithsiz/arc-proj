@@ -90,10 +90,10 @@ class Graph:
 		del self.graph.nodes[node_pos]['agent']
 
 		# Then update the caches
-		# Note: `unsatisfied_nodes.remove(node_pos)` might not succeed, but we're fine
+		# Note: `unsatisfied_nodes.discard(node_pos)` might not succeed, but we're fine
 		#       with that, we only want to remove it, if it exists anyway
 		self.cache.empty_nodes.add(node_pos)
-		self.cache.unsatisfied_nodes.remove(node_pos)
+		self.cache.unsatisfied_nodes.discard(node_pos)
 		self.update_unsatisfied_nodes_cache(node_pos, skip_node=True)
 
 		return agent
