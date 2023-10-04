@@ -20,6 +20,9 @@ if __name__ == "__main__":
 
 	# Display method
 	class DisplayMethod(Enum):
+		# Does not display
+		NONE = 0
+
 		# Displays as a general graph, with edges
 		GRAPH = 1
 
@@ -32,17 +35,21 @@ if __name__ == "__main__":
 	# Visualize graph
 	with plt.ion():
 		# Create the figure
-		fig = plt.figure()
+		fig = plt.figure() if display_method != DisplayMethod.NONE else None
 
 		def draw():
 			"""
 			Draws the graph
 			"""
 
-			# Clear any previous figures
+			# If we shouldn't be displaying, return
+			if display_method == DisplayMethod.NONE:
+				return
+
+			# Else clear any previous figures
 			fig.clear()
 
-			# Draw it using the display method
+			# And draw it using the display method
 			if display_method == DisplayMethod.GRAPH:
 				graph.draw(fig)
 
@@ -94,4 +101,5 @@ if __name__ == "__main__":
 				break
 
 		# Finally, once we're done, block until the user closes the plots
-		plt.show(block=True)
+		if display_method != DisplayMethod.NONE:
+			plt.show(block=True)
