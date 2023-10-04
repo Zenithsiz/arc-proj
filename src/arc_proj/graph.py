@@ -70,8 +70,9 @@ class Graph:
 		"""
 
 		# Set it on the graph
-		assert 'agent' not in self.graph.nodes[node_pos], "Node position had agent"
-		self.graph.nodes[node_pos]['agent'] = agent
+		node = self.graph.nodes[node_pos]
+		assert 'agent' not in node, f"Node position {node_pos} already had an agent: {node['agent']}"
+		node['agent'] = agent
 
 		# Then update the caches
 		self.cache.empty_nodes.remove(node_pos)
@@ -85,9 +86,10 @@ class Graph:
 		"""
 
 		# Remove it from the graph
-		agent = util.try_index_dict(self.graph.nodes[node_pos], 'agent')
-		assert agent is not None, "Node position did not have agent"
-		del self.graph.nodes[node_pos]['agent']
+		node = self.graph.nodes[node_pos]
+		agent = util.try_index_dict(node, 'agent')
+		assert agent is not None, f"Node position {node_pos} did not have agent"
+		del node['agent']
 
 		# Then update the caches
 		# Note: `unsatisfied_nodes.discard(node_pos)` might not succeed, but we're fine
@@ -106,9 +108,10 @@ class Graph:
 		# Remove them all from the graph
 		agents = []
 		for node_pos in self.cache.unsatisfied_nodes:
-			agent = util.try_index_dict(self.graph.nodes[node_pos], 'agent')
-			assert agent is not None, "Node position did not have agent"
-			del self.graph.nodes[node_pos]['agent']
+			node = self.graph.nodes[node_pos]
+			agent = util.try_index_dict(node, 'agent')
+			assert agent is not None, f"Node position {node_pos} did not have agent"
+			del node['agent']
 			agents.append(agent)
 
 		# Then mass-update the unsatisfied nodes
