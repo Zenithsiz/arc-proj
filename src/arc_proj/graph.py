@@ -2,7 +2,6 @@
 Graph
 """
 
-import dataclasses
 from dataclasses import dataclass
 from typing import Any, Generator, Tuple
 
@@ -23,10 +22,10 @@ class GraphCache:
 	"""
 
 	# Unsatisfied nodes
-	unsatisfied_nodes: set[NodePos] = dataclasses.field(default_factory=set)
+	unsatisfied_nodes: set[NodePos]
 
 	# Empty nodes
-	empty_nodes: set[NodePos] = dataclasses.field(default_factory=set)
+	empty_nodes: set[NodePos]
 
 @dataclass
 class DebugOptions:
@@ -62,7 +61,6 @@ class Graph:
 		# Create the graph and initialize it to empty
 		self.size = graph_size
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
-		self.cache = GraphCache()
 		self.debug = DebugOptions(
 			sanity_check_caches=False
 		)
@@ -73,8 +71,11 @@ class Graph:
 				self.graph.add_edge((x, y), (x + 1, y + 1))
 				self.graph.add_edge((x + 1, y), (x, y + 1))
 
-		# Initialize caches
-		self.cache.empty_nodes = set(node_pos for node_pos in self.graph.nodes)
+		# And initialize caches
+		self.cache = GraphCache(
+			unsatisfied_nodes=set(),
+			empty_nodes=set(node_pos for node_pos in self.graph.nodes),
+		)
 
 	def add_agent(self, node_pos: NodePos, agent: Agent):
 		"""
