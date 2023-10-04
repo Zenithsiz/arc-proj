@@ -141,8 +141,8 @@ class Graph:
 
 		# Remove it from the graph
 		node = self.graph.nodes[node_pos]
-		agent = util.try_index_dict(node, 'agent')
-		assert agent is not None, f"Node position {node_pos} did not have agent"
+		assert 'agent' in node, f"Node position {node_pos} did not have agent"
+		agent = node['agent']
 		del node['agent']
 
 		# Then update the caches
@@ -211,17 +211,18 @@ class Graph:
 
 		# If the node is empty, it doesn't have a satisfaction
 		node = self.graph.nodes[node_pos]
-		agent = util.try_index_dict(node, 'agent')
-		if agent is None:
+		if 'agent' not in node:
 			return None
-		agent: Agent
+		agent: Agent = node['agent']
 
 		# Else count all neighbors that aren't empty
-		neighbors = self.graph.adj[node_pos]
-		neighbors: Generator[Any] = (self.graph.nodes[neighbor_pos] for neighbor_pos in neighbors)
-		neighbors: Generator[Agent | None] = map(lambda node: util.try_index_dict(node, 'agent'), neighbors)
-		neighbors: Generator[Agent] = filter(lambda agent: agent is not None, neighbors)
-		neighbors: list[Agent] = list(neighbors)
+		neighbors: list[Agent] = []
+		for neighbor_pos in self.graph.adj[node_pos]:
+			neighbor_node = self.graph.nodes[neighbor_pos]
+			if 'agent' not in neighbor_node:
+				continue
+
+			neighbors.append(neighbor_node['agent'])
 
 		return agent.satisfaction(neighbors)
 
