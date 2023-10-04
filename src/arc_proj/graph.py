@@ -200,7 +200,11 @@ class Graph:
 
 			# Select a random agent
 			agent = self.random_state.choice(list(agent_weights.keys()), p=list(agent_weights.values()))
-			self.add_agent(node_pos, agent)
+			self.graph.nodes[node_pos]['agent'] = agent
+			self.cache.empty_nodes.remove(node_pos)
+
+		# At the end, update the remaining caches
+		self.update_unsatisfied_nodes_cache_multiple(self.graph.nodes)
 
 	def agent_satisfaction(self, node_pos: NodePos) -> float | None:
 		"""
