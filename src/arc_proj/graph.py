@@ -37,6 +37,9 @@ class DebugOptions:
 	# Whether to sanity check the caches
 	sanity_check_caches: bool
 
+	# Whether to check equilibrium
+	check_equilibrium: bool
+
 class Graph:
 	"""
 	Represents a graph of agents
@@ -67,7 +70,8 @@ class Graph:
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
 		self.random_state = numpy.random.RandomState(seed)
 		self.debug = DebugOptions(
-			sanity_check_caches=False
+			sanity_check_caches=False,
+			check_equilibrium=True
 		)
 
 		# Then add the diagonal edges.
@@ -310,9 +314,11 @@ class Graph:
 		self.random_state.shuffle(empty_nodes)
 		self.move_agents(dict(zip(self.cache.unsatisfied_nodes, empty_nodes)))
 
+		# We've reached equilibrium if there are no unsatisfied nodes
+		# Note: If enabled, we also sanity check that all nodes are satisfied.
 		reached_equilibrium = len(self.cache.unsatisfied_nodes) == 0
-		if reached_equilibrium:
-			for node_pos in self.graph.nodes():
+		if __debug__ and self.debug.check_equilibrium and reached_equilibrium:
+			for node_pos in self.graph.nodes:
 				satisfied = self.agent_satisfied(node_pos)
 				assert satisfied is None or satisfied, f"Node {node_pos} wasn't satisfied after reaching equilibrium"
 
