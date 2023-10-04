@@ -28,6 +28,14 @@ class GraphCache:
 	# Empty nodes
 	empty_nodes: set[NodePos] = dataclasses.field(default_factory=set)
 
+@dataclass
+class DebugOptions:
+	"""
+	Debug options for `Graph`
+	"""
+
+	# Whether to sanity check the caches
+	sanity_check_caches: bool
 
 class Graph:
 	"""
@@ -43,6 +51,9 @@ class Graph:
 	# Cache
 	cache: GraphCache
 
+	# Debug
+	debug: DebugOptions
+
 	def __init__(self, graph_size: Tuple[int, int]) -> None:
 		"""
 		Initializes the graph with a size of `graph_size`
@@ -52,6 +63,9 @@ class Graph:
 		self.size = graph_size
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
 		self.cache = GraphCache()
+		self.debug = DebugOptions(
+			sanity_check_caches=False
+		)
 
 		# Then add the diagonal edges.
 		for y in range(graph_size[1] - 1):
@@ -245,11 +259,18 @@ class Graph:
 		Returns whether we've reached equilibrium
 		"""
 
-		# Sanity check: Ensure all unsatisfied agents are actually
-		#               unsatisfied
-		if __debug__:
-			for node_pos in self.cache.unsatisfied_nodes:
-				assert not self.agent_satisfied(node_pos), f"Node {node_pos} was on unsatisfied list, but was satisfied"
+		# Sanity check: Ensure the caches are valid
+		# Note: This is pretty slow normally, so we only enable it
+		#       on debug and when explicitly requested
+		if __debug__ and self.debug.sanity_check_caches:
+			for node_pos in self.graph.nodes:
+				self.update_unsatisfied_nodes_cache(node_pos)
+				match self.agent_satisfied(node_pos):
+					case True | None: assert node_pos not in self.cache.unsatisfied_nodes, f"Node {node_pos} was satisfied, but present in unsatisfied cache"
+					case False      : assert node_pos     in self.cache.unsatisfied_nodes, f"Node {node_pos} wasn't satisfied, but not present in unsatisfied cache"
+
+				if 'agent' not in self.graph.nodes[node_pos]:
+					assert node_pos in self.cache.empty_nodes, f"Node {node_pos} was empty, but not present in empty cache"
 
 		# Remove all unsatisfied agents
 		removed_agents = self.remove_unsatisfied_agents()
