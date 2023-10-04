@@ -3,6 +3,7 @@ Graph
 """
 
 from dataclasses import dataclass
+import itertools
 from typing import Any, Generator, Tuple
 
 import matplotlib.pyplot as plt
@@ -81,6 +82,41 @@ class Graph:
 			empty_nodes=set(node_pos for node_pos in self.graph.nodes),
 		)
 
+	def move_agents(self, nodes_pos: dict[NodePos, NodePos]):
+		"""
+		Moves all agents in `nodes_pos`.
+		"""
+
+		# Note: This pass both removes the agents from their previous locations
+		#       and moves them to the next. In order to not override
+		agents_cache = dict()
+		for src_pos, dst_pos in nodes_pos.items():
+			# Skip when the source and destination are the same
+			if src_pos == dst_pos:
+				continue
+
+			# Get the agent in the node (but try our agent cache first, because we've might overridden it already)
+			agent = agents_cache.pop(src_pos, None)
+			if agent is None:
+				src_node = self.graph.nodes[src_pos]
+				assert 'agent' in src_node, f"Node position {src_node} did not have an agent"
+				agent = src_node['agent']
+				del src_node['agent']
+				self.cache.empty_nodes.add(src_pos)
+
+			# Then save the agent in the to slot (in case we need it later), then write our agent into it
+			dst_node = self.graph.nodes[dst_pos]
+			if 'agent' in dst_node:
+				agents_cache[dst_pos] = dst_node['agent']
+			dst_node['agent'] = agent
+			self.cache.empty_nodes.discard(dst_pos)
+
+		assert len(agents_cache) == 0, f"Destination nodes overlapped or destination node already had an agent: {agents_cache}"
+
+		# Then mass-update the source and destination nodes
+		for src_pos in set(itertools.chain(nodes_pos.keys(), nodes_pos.values())):
+			self.update_unsatisfied_nodes_cache(src_pos)
+
 	def add_agent(self, node_pos: NodePos, agent: Agent):
 		"""
 		Adds an agent `agent` at node `node_pos`.
@@ -115,33 +151,6 @@ class Graph:
 		self.update_unsatisfied_nodes_cache(node_pos)
 
 		return agent
-
-	def remove_unsatisfied_agents(self) -> list[Agent]:
-		"""
-		Removes all unsatisfied agents
-		"""
-
-		# Remove them all from the graph
-		agents = []
-		for node_pos in self.cache.unsatisfied_nodes:
-			node = self.graph.nodes[node_pos]
-			agent = util.try_index_dict(node, 'agent')
-			assert agent is not None, f"Node position {node_pos} did not have agent"
-			del node['agent']
-			agents.append(agent)
-
-		# Then mass-update the unsatisfied nodes
-		# Note: We need to update since some neighbor nodes might now be
-		#       unsatisfied from a similar agent leaving their neighborhood.
-		unsatisfied_nodes = list(self.cache.unsatisfied_nodes)
-		self.cache.unsatisfied_nodes.clear()
-		for node_pos in unsatisfied_nodes:
-			self.update_unsatisfied_nodes_cache(node_pos)
-
-		# Finally add them to the empty nodes
-		self.cache.empty_nodes.update(unsatisfied_nodes)
-
-		return agents
 
 	def update_unsatisfied_nodes_cache(self, node_pos: NodePos):
 		"""
@@ -277,19 +286,12 @@ class Graph:
 				if 'agent' not in self.graph.nodes[node_pos]:
 					assert node_pos in self.cache.empty_nodes, f"Node {node_pos} was empty, but not present in empty cache"
 
-		# Remove all unsatisfied agents
-		removed_agents = self.remove_unsatisfied_agents()
-
-		# Then sample some empty nodes
-		# Note: Unfortunately this is faster than reservoir sampling with
-		#       the set, as that's still `O(max(n, k))` due to not being able to
-		#       efficiently advance the iterator by a delta.
-		empty_nodes = list(self.cache.empty_nodes)
+		# Move all the current unsatisfied to another place
+		# Note: We choose from both the empty nodes, as well as the unsatisfied, as they'll
+		#       all be moving in a second, so we won't get duplicates.
+		empty_nodes = list(self.cache.empty_nodes | self.cache.unsatisfied_nodes)
 		self.random_state.shuffle(empty_nodes)
-
-		# And find a new spot for all removed agents
-		for agent, node_pos in zip(removed_agents, empty_nodes):
-			self.add_agent(node_pos, agent)
+		self.move_agents(dict(zip(self.cache.unsatisfied_nodes, empty_nodes)))
 
 		reached_equilibrium = len(self.cache.unsatisfied_nodes) == 0
 		if reached_equilibrium:
