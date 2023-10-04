@@ -262,6 +262,6 @@ class Graph:
 		if reached_equilibrium:
 			for node_pos in self.graph.nodes():
 				satisfied = self.agent_satisfied(node_pos)
-				assert satisfied is None or satisfied, "A"
+				assert satisfied is None or satisfied, f"Node {node_pos} wasn't satisfied after reaching equilibrium"
 
 		return reached_equilibrium
