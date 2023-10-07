@@ -165,11 +165,11 @@ if __name__ == "__main__":
 		for cur_sample in range(max_samples):
 			# Measure
 			# Note: We suppress stdout while measuring, to not clutter the output
-			start_time_ns = time.time_ns()
 			sys.stdout = StringIO()
+			start_time_ns = time.time_ns()
 			main()
-			sys.stdout = sys.__stdout__
 			elapsed_time_ns = time.time_ns() - start_time_ns
+			sys.stdout = sys.__stdout__
 
 			print(f"Sample #{cur_sample+1}: {util.fmt_time(elapsed_time_ns / 1e9)}", end="\r")
 
