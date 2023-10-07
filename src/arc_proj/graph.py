@@ -194,7 +194,8 @@ class Graph:
 
 		# Normalize the weights to sum to 1
 		weights_sum = sum(agent_weights.values())
-		agent_weights = { agent: weight / weights_sum for agent, weight in agent_weights.items() }
+		agents = list(agent_weights.keys())
+		agent_weights = list(weight / weights_sum for weight in agent_weights.values())
 
 		# Then for each node, select either empty or a random agent
 		# TODO: Maybe optimize cases when `empty_cache` is high?
@@ -204,7 +205,7 @@ class Graph:
 				continue
 
 			# Select a random agent
-			agent = self.random_state.choice(list(agent_weights.keys()), p=list(agent_weights.values()))
+			agent = self.random_state.choice(agents, p=agent_weights)
 			self.agents[node_pos] = agent
 			self.cache.empty_nodes.remove(node_pos)
 
