@@ -11,7 +11,7 @@ import arc_proj.util as util
 from arc_proj.agent import Agent
 from arc_proj.graph import Graph
 
-if __name__ == "__main__":
+def main():
 	# Create the graph
 	start_time = time.time()
 
@@ -109,3 +109,6 @@ if __name__ == "__main__":
 		# Finally, once we're done, block until the user closes the plots
 		if display_method != DisplayMethod.NONE:
 			plt.show(block=True)
+
+if __name__ == "__main__":
+	main()
