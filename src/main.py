@@ -2,6 +2,7 @@
 ARC Project
 """
 
+import os
 import sys
 import time
 from enum import Enum
@@ -13,6 +14,7 @@ import numpy
 import arc_proj.util as util
 from arc_proj.agent import Agent
 from arc_proj.graph import Graph
+from PIL import Image
 
 
 def main():
@@ -38,31 +40,49 @@ def main():
 		# Displays as a compact grid, without any spacing between nodes
 		GRID = 2
 
+		# Writes the compact grid image to file
+		GRID_FILE = 3
+
+		def needs_fig(self) -> bool:
+			"""Returns if this display method needs a figure"""
+			return self in [DisplayMethod.GRAPH, DisplayMethod.GRID]
+
+		def needs_dir(self) -> bool:
+			"""Returns if this display methods needs an output directory"""
+			return self in [DisplayMethod.GRID_FILE]
+
 	display_method = DisplayMethod.GRID
 	rounds_per_display = 1
+
+	# Setup display
+	if display_method.needs_dir():
+		os.makedirs("output/", exist_ok=True)
 
 	# Visualize graph
 	with plt.ion():
 		# Create the figure
-		fig = plt.figure() if display_method != DisplayMethod.NONE else None
+		fig = plt.figure() if display_method.needs_fig() else None
 
 		def draw():
 			"""
 			Draws the graph
 			"""
 
-			# If we shouldn't be displaying, return
+			# Check the display method
 			if display_method == DisplayMethod.NONE:
-				return
+				pass
 
-			# Else clear any previous figures
-			fig.clear()
-
-			# And draw it using the display method
-			if display_method == DisplayMethod.GRAPH:
+			elif display_method == DisplayMethod.GRAPH:
+				fig.clear()
 				graph.draw(fig)
 
+				fig.tight_layout()
+				fig.canvas.draw()
+				fig.canvas.flush_events()
+
 			elif display_method == DisplayMethod.GRID:
+				fig.clear()
+
 				# Show all nodes
 				ax = fig.add_subplot(1, 2, 1)
 				ax.axis("off")
@@ -73,13 +93,20 @@ def main():
 				ax.axis("off")
 				ax.imshow(graph.satisfaction_img())
 
+				fig.tight_layout()
+				fig.canvas.draw()
+				fig.canvas.flush_events()
+
+			elif display_method == DisplayMethod.GRID_FILE:
+				buffer = graph.agent_img()
+				buffer = [(int(255 * r), int(255 * g), int(255 * b)) for row in buffer for r, g, b in row]
+
+				img = Image.new("RGB", (graph_size[0], graph_size[1]))
+				img.putdata(buffer)
+				img.save(f"output/{cur_round}.png")
+
 			else:
 				raise ValueError("Unknown display method")
-
-			# Finally show it
-			fig.tight_layout()
-			fig.canvas.draw()
-			fig.canvas.flush_events()
 
 		# And draw
 		cur_round = 0
@@ -110,7 +137,7 @@ def main():
 				break
 
 		# Finally, once we're done, block until the user closes the plots
-		if display_method != DisplayMethod.NONE:
+		if display_method.needs_fig():
 			plt.show(block=True)
 
 if __name__ == "__main__":
