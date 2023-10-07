@@ -2,14 +2,18 @@
 ARC Project
 """
 
+import sys
 import time
 from enum import Enum
+from io import StringIO
 
 import matplotlib.pyplot as plt
+import numpy
 
 import arc_proj.util as util
 from arc_proj.agent import Agent
 from arc_proj.graph import Graph
+
 
 def main():
 	# Create the graph
@@ -22,7 +26,6 @@ def main():
 
 	creation_duration = time.time() - start_time
 	print(f"\tTook {util.fmt_time(creation_duration)} ({util.fmt_time(creation_duration / (graph_size[0] * graph_size[1]))}/node)")
-
 
 	# Display method
 	class DisplayMethod(Enum):
@@ -111,4 +114,56 @@ def main():
 			plt.show(block=True)
 
 if __name__ == "__main__":
-	main()
+	# Execution method
+	class ExecMethod(Enum):
+		# Normal execution
+		NORMAL = 0
+
+		# Benchmark execution
+		BENCHMARK = 1
+
+	exec_method = ExecMethod.NORMAL
+
+	if exec_method == ExecMethod.NORMAL:
+		main()
+
+	elif exec_method == ExecMethod.BENCHMARK:
+		# Limits
+		max_samples = 100
+		max_time_s = 30
+
+		# Samples and totals
+		samples = []
+		total_time_s = 0
+		for cur_sample in range(max_samples):
+			# Measure
+			# Note: We suppress stdout while measuring, to not clutter the output
+			start_time_ns = time.time_ns()
+			sys.stdout = StringIO()
+			main()
+			sys.stdout = sys.__stdout__
+			elapsed_time_ns = time.time_ns() - start_time_ns
+
+			print(f"Sample #{cur_sample+1}: {util.fmt_time(elapsed_time_ns / 1e9)}", end="\r")
+
+			samples.append(elapsed_time_ns)
+
+			# If we're past the total time, break
+			total_time_s += elapsed_time_ns / 1e9
+			if total_time_s > max_time_s:
+				break
+
+		# Then output some statistical information
+		avg_ns = numpy.average(samples)
+		std_ns = numpy.std(samples)
+		min_ns = numpy.min(samples)
+		max_ns = numpy.max(samples)
+
+		print()
+		print("Benchmark:")
+		print(f"\tSamples: {len(samples)}")
+		print(f"\tTime: {util.fmt_time(avg_ns / 1e9)} ± {util.fmt_time(std_ns / 1e9)}")
+		print(f"\tRange: {util.fmt_time(min_ns / 1e9)} .. {util.fmt_time(max_ns / 1e9)}")
+
+	else:
+		raise ValueError("Unknown exec method")
