@@ -44,5 +44,5 @@ class Agent(Enum):
 		"""
 
 		match self:
-			case Agent.RED:    return [1.0, 0.0, 0.0]
-			case Agent.BLUE:   return [0.0, 0.0, 1.0]
+			case Agent.RED:    return (1.0, 0.0, 0.0)
+			case Agent.BLUE:   return (0.0, 0.0, 1.0)
