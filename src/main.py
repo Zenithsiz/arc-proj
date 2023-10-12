@@ -10,6 +10,7 @@ from io import StringIO
 
 import matplotlib.pyplot as plt
 import numpy
+import json
 
 import arc_proj.util as util
 from arc_proj.agent import Agent
@@ -25,6 +26,8 @@ def main():
 	graph_size = [80, 80]
 	graph = Graph(graph_size=graph_size, seed=773)
 	graph.fill_with_agents(0.1, { Agent.RED: 1, Agent.BLUE: 1 })
+
+	average_satisfactions = []
 
 	creation_duration = time.time() - start_time
 	print(f"\tTook {util.fmt_time(creation_duration)} ({util.fmt_time(creation_duration / (graph_size[0] * graph_size[1]))}/node)")
@@ -120,6 +123,9 @@ def main():
 				print(f"Round #{cur_round+1}:")
 				unsatisfied_nodes = len(graph.cache.unsatisfied_nodes)
 				print(f"\tUnsatisfied nodes: {unsatisfied_nodes}")
+				average_satisfaction = graph.agent_average_satisfaction()
+				print(f"\tAverage satisfaction: {average_satisfaction:.5f}")
+				average_satisfactions.append(average_satisfaction)
 				start_time = time.time()
 				cur_round += 1
 
@@ -135,6 +141,13 @@ def main():
 				print(f"Reached equilibrium after {cur_round} round(s)")
 				draw()
 				break
+
+		# Write the output
+		output = {
+			'average_satisfactions': average_satisfactions,
+		}
+		output_file = open("output.json", 'w')
+		json.dump(output, output_file)
 
 		# Finally, once we're done, block until the user closes the plots
 		if display_method.needs_fig():

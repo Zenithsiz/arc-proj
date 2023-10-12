@@ -212,6 +212,18 @@ class Graph:
 		# At the end, update the remaining caches
 		self.update_unsatisfied_nodes_cache_multiple(self.graph.nodes)
 
+	def agent_average_satisfaction(self) -> float | None:
+		"""
+		Returns the average satisfaction of all agents.
+
+		If there are no agents, returns `None`
+		"""
+
+		if len(self.agents) == 0:
+			return None
+
+		return sum(self.agent_satisfaction(node_pos) for node_pos in self.agents.keys()) / len(self.agents)
+
 	def agent_satisfaction(self, node_pos: NodePos) -> float | None:
 		"""
 		Returns the satisfaction of an agent, from 0.0 to 1.0.
