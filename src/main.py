@@ -13,7 +13,7 @@ import numpy
 import json
 
 import arc_proj.util as util
-from arc_proj.agent import Agent
+from arc_proj.agent import NAgent, NAgentKind, GAgent
 from arc_proj.graph import Graph
 from PIL import Image
 
@@ -25,7 +25,11 @@ def main():
 	print("Creation:")
 	graph_size = [80, 80]
 	graph = Graph(graph_size=graph_size, seed=773)
-	graph.fill_with_agents(0.1, { Agent.RED: 1, Agent.BLUE: 1 })
+	graph.fill_with_agents(0.1, { NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 })
+	#agent_count = 5
+	#graph.fill_with_agents(0.1,
+	#	{ GAgent(n / (agent_count - 1)): 1 for n in range(agent_count) }
+	#)
 
 	average_satisfactions = []
 
