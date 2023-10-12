@@ -2,73 +2,94 @@
 ARC Project
 """
 
+from dataclasses import dataclass
 import os
 import sys
 import time
 from enum import Enum
 from io import StringIO
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy
 import json
 
 import arc_proj.util as util
-from arc_proj.agent import NAgent, NAgentKind, GAgent
+from arc_proj.agent import Agent, NAgent, NAgentKind, GAgent
 from arc_proj.graph import Graph
 from PIL import Image
 
+# Display method
+class DisplayMethod(Enum):
+	# Does not display
+	NONE = 0
 
-def main():
+	# Displays as a general graph, with edges
+	GRAPH = 1
+
+	# Displays as a compact grid, without any spacing between nodes
+	GRID = 2
+
+	# Writes the compact grid image to file
+	GRID_FILE = 3
+
+	def needs_fig(self) -> bool:
+		"""Returns if this display method needs a figure"""
+		return self in [DisplayMethod.GRAPH, DisplayMethod.GRID]
+
+	def needs_dir(self) -> bool:
+		"""Returns if this display methods needs an output directory"""
+		return self in [DisplayMethod.GRID_FILE]
+
+
+@dataclass
+class RunParams:
+	# Graph size
+	graph_size: Tuple[int, int]
+
+	# Seed
+	seed: int | None
+
+	# Empty chance
+	empty_chance: float
+
+	# Agent weights
+	agent_weights: dict[Agent, float]
+
+	# Output json file path
+	output_json_path: str | None
+
+	# Output image dir path
+	output_img_path: str | None
+
+	# Display method
+	display_method: DisplayMethod
+
+	# Rounds per display
+	rounds_per_display: int
+
+def main(params: RunParams):
 	# Create the graph
 	start_time = time.time()
 
 	print("Creation:")
-	graph_size = [80, 80]
-	graph = Graph(graph_size=graph_size, seed=773)
-	graph.fill_with_agents(0.1, { NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 })
-	#agent_count = 5
-	#graph.fill_with_agents(0.1,
-	#	{ GAgent(n / (agent_count - 1)): 1 for n in range(agent_count) }
-	#)
+	graph = Graph(graph_size=params.graph_size, seed=params.seed)
+	graph.fill_with_agents(params.empty_chance, params.agent_weights)
 
 	average_satisfactions = []
 
 	creation_duration = time.time() - start_time
-	print(f"\tTook {util.fmt_time(creation_duration)} ({util.fmt_time(creation_duration / (graph_size[0] * graph_size[1]))}/node)")
-
-	# Display method
-	class DisplayMethod(Enum):
-		# Does not display
-		NONE = 0
-
-		# Displays as a general graph, with edges
-		GRAPH = 1
-
-		# Displays as a compact grid, without any spacing between nodes
-		GRID = 2
-
-		# Writes the compact grid image to file
-		GRID_FILE = 3
-
-		def needs_fig(self) -> bool:
-			"""Returns if this display method needs a figure"""
-			return self in [DisplayMethod.GRAPH, DisplayMethod.GRID]
-
-		def needs_dir(self) -> bool:
-			"""Returns if this display methods needs an output directory"""
-			return self in [DisplayMethod.GRID_FILE]
-
-	display_method = DisplayMethod.GRID
-	rounds_per_display = 1
+	print(f"\tTook {util.fmt_time(creation_duration)} ({util.fmt_time(creation_duration / (params.graph_size[0] * params.graph_size[1]))}/node)")
 
 	# Setup display
-	if display_method.needs_dir():
-		os.makedirs("output/", exist_ok=True)
+	if params.display_method.needs_dir():
+		assert params.output_img_path is not None, "Display method needs output image path, but it was `None`"
+		os.makedirs(params.output_img_path, exist_ok=True)
 
 	# Visualize graph
 	with plt.ion():
 		# Create the figure
-		fig = plt.figure() if display_method.needs_fig() else None
+		fig = plt.figure() if params.display_method.needs_fig() else None
 
 		def draw():
 			"""
@@ -76,10 +97,10 @@ def main():
 			"""
 
 			# Check the display method
-			if display_method == DisplayMethod.NONE:
+			if params.display_method == DisplayMethod.NONE:
 				pass
 
-			elif display_method == DisplayMethod.GRAPH:
+			elif params.display_method == DisplayMethod.GRAPH:
 				fig.clear()
 				graph.draw(fig)
 
@@ -87,7 +108,7 @@ def main():
 				fig.canvas.draw()
 				fig.canvas.flush_events()
 
-			elif display_method == DisplayMethod.GRID:
+			elif params.display_method == DisplayMethod.GRID:
 				fig.clear()
 
 				# Show all nodes
@@ -104,13 +125,13 @@ def main():
 				fig.canvas.draw()
 				fig.canvas.flush_events()
 
-			elif display_method == DisplayMethod.GRID_FILE:
+			elif params.display_method == DisplayMethod.GRID_FILE:
 				buffer = graph.agent_img()
 				buffer = [(int(255 * r), int(255 * g), int(255 * b)) for row in buffer for r, g, b in row]
 
-				img = Image.new("RGB", (graph_size[0], graph_size[1]))
+				img = Image.new("RGB", (params.graph_size[0], params.graph_size[1]))
 				img.putdata(buffer)
-				img.save(f"output/{cur_round}.png")
+				img.save(f"{params.output_img_path}/{cur_round}.png")
 
 			else:
 				raise ValueError("Unknown display method")
@@ -123,7 +144,7 @@ def main():
 
 			# And update the graph
 			reached_equilibrium = False
-			for _ in range(rounds_per_display):
+			for _ in range(params.rounds_per_display):
 				print(f"Round #{cur_round+1}:")
 				unsatisfied_nodes = len(graph.cache.unsatisfied_nodes)
 				print(f"\tUnsatisfied nodes: {unsatisfied_nodes}")
@@ -147,14 +168,15 @@ def main():
 				break
 
 		# Write the output
-		output = {
-			'average_satisfactions': average_satisfactions,
-		}
-		output_file = open("output.json", 'w')
-		json.dump(output, output_file)
+		if params.output_json_path is not None:
+			output = {
+				'average_satisfactions': average_satisfactions,
+			}
+			output_file = open(params.output_json_path, 'w')
+			json.dump(output, output_file)
 
 		# Finally, once we're done, block until the user closes the plots
-		if display_method.needs_fig():
+		if params.display_method.needs_fig():
 			plt.show(block=True)
 
 if __name__ == "__main__":
@@ -169,12 +191,35 @@ if __name__ == "__main__":
 	exec_method = ExecMethod.NORMAL
 
 	if exec_method == ExecMethod.NORMAL:
-		main()
+		params = RunParams(
+			graph_size=[80, 80],
+			seed=773,
+			empty_chance=0.1,
+			agent_weights={ NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 },
+			output_json_path="output.json",
+			output_img_path="output",
+			display_method=DisplayMethod.GRID,
+			rounds_per_display=1
+		)
+
+		main(params)
 
 	elif exec_method == ExecMethod.BENCHMARK:
 		# Limits
 		max_samples = 100
 		max_time_s = 30
+
+		# Parameters
+		params = RunParams(
+			graph_size=[80, 80],
+			seed=773,
+			empty_chance=0.1,
+			agent_weights={ NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 },
+			output_json_path=None,
+			output_img_path=None,
+			display_method=DisplayMethod.NONE,
+			rounds_per_display=1
+		)
 
 		# Samples and totals
 		samples = []
@@ -184,7 +229,7 @@ if __name__ == "__main__":
 			# Note: We suppress stdout while measuring, to not clutter the output
 			sys.stdout = StringIO()
 			start_time_ns = time.time_ns()
-			main()
+			main(params)
 			elapsed_time_ns = time.time_ns() - start_time_ns
 			sys.stdout = sys.__stdout__
 
