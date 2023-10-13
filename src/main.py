@@ -16,7 +16,7 @@ import numpy
 from PIL import Image
 
 import arc_proj.util as util
-from arc_proj.agent import Agent, NAgent, NAgentKind
+from arc_proj.agent import Agent, GAgent, NAgent, NAgentKind
 from arc_proj.graph import Graph
 
 
@@ -207,7 +207,10 @@ def main():
 		# Benchmark execution
 		BENCHMARK = 1
 
-	exec_method = ExecMethod.NORMAL
+		# Json output
+		JSON_OUTPUT = 2,
+
+	exec_method = ExecMethod.JSON_OUTPUT
 
 	if exec_method == ExecMethod.NORMAL:
 		params = RunParams(
@@ -222,6 +225,26 @@ def main():
 		)
 
 		run(params)
+
+	elif exec_method == ExecMethod.JSON_OUTPUT:
+		seed_start = 773
+		seed_end = seed_start + 50
+
+		os.makedirs("output", exist_ok=True)
+		for seed in range(seed_start, seed_end):
+			agent_count = 10
+			params = RunParams(
+				graph_size=[80, 80],
+				seed=seed,
+				empty_chance=0.1,
+				agent_weights={ GAgent( agent_idx / (agent_count - 1.0) ): 1.0 for agent_idx in range(agent_count) },
+				output_json_path=f"output/s{seed}.json",
+				output_img_path=None,
+				display_method=DisplayMethod.NONE,
+				rounds_per_display=1
+			)
+
+			run(params)
 
 	elif exec_method == ExecMethod.BENCHMARK:
 		# Limits
