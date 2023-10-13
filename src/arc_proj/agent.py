@@ -66,7 +66,7 @@ class NAgent(Agent):
 			case NAgentKind.BLUE: return (0.0, 0.0, 1.0)
 
 @dataclass(unsafe_hash=True)
-class GAgent:
+class GAgent(Agent):
 	"""
 	A gradient agent within the graph.
 	"""
