@@ -1,6 +1,6 @@
 [FORMAT]
 indent-string='\t'
-max-line-length=120
+max-line-length=150
 
 # `f`: Callbacks
 # `it`: Iterators
@@ -8,5 +8,7 @@ good-names=f,it
 
 [MESSAGES CONTROL]
 
+# W0621: Due to variables defined in `if __name__ == "__main__"`.
 # W0511: This shouldn't be a warning
-disable=W0511
+# C0201: It's clearer only the keys exist by using `.keys()`
+disable=W0621,W0511,C0201

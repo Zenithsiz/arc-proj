@@ -4,13 +4,12 @@ Graph
 
 from dataclasses import dataclass
 import itertools
-from typing import Any, Generator, Iterable, Tuple
+from typing import Iterable, Tuple
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy
 
-import arc_proj.util as util
 from arc_proj.agent import Agent
 
 # Node position type

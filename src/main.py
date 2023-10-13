@@ -2,25 +2,29 @@
 ARC Project
 """
 
-from dataclasses import dataclass
+import json
 import os
 import sys
 import time
+from dataclasses import dataclass
 from enum import Enum
 from io import StringIO
 from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy
-import json
-
-import arc_proj.util as util
-from arc_proj.agent import Agent, NAgent, NAgentKind, GAgent
-from arc_proj.graph import Graph
 from PIL import Image
 
-# Display method
+import arc_proj.util as util
+from arc_proj.agent import Agent, NAgent, NAgentKind
+from arc_proj.graph import Graph
+
+
 class DisplayMethod(Enum):
+	"""
+	Display method
+	"""
+
 	# Does not display
 	NONE = 0
 
@@ -44,6 +48,10 @@ class DisplayMethod(Enum):
 
 @dataclass
 class RunParams:
+	"""
+	Parameters for running the simulation
+	"""
+
 	# Graph size
 	graph_size: Tuple[int, int]
 
@@ -68,7 +76,11 @@ class RunParams:
 	# Rounds per display
 	rounds_per_display: int
 
-def main(params: RunParams):
+def run(params: RunParams):
+	"""
+	Runs the simulation
+	"""
+
 	# Create the graph
 	start_time = time.time()
 
@@ -172,16 +184,23 @@ def main(params: RunParams):
 			output = {
 				'average_satisfactions': average_satisfactions,
 			}
-			output_file = open(params.output_json_path, 'w')
+			output_file = open(params.output_json_path, 'w', encoding="utf-8")
 			json.dump(output, output_file)
 
 		# Finally, once we're done, block until the user closes the plots
 		if params.display_method.needs_fig():
 			plt.show(block=True)
 
-if __name__ == "__main__":
-	# Execution method
+def main():
+	"""
+	Main function
+	"""
+
 	class ExecMethod(Enum):
+		"""
+		Execution method
+		"""
+
 		# Normal execution
 		NORMAL = 0
 
@@ -202,7 +221,7 @@ if __name__ == "__main__":
 			rounds_per_display=1
 		)
 
-		main(params)
+		run(params)
 
 	elif exec_method == ExecMethod.BENCHMARK:
 		# Limits
@@ -229,7 +248,7 @@ if __name__ == "__main__":
 			# Note: We suppress stdout while measuring, to not clutter the output
 			sys.stdout = StringIO()
 			start_time_ns = time.time_ns()
-			main(params)
+			run(params)
 			elapsed_time_ns = time.time_ns() - start_time_ns
 			sys.stdout = sys.__stdout__
 
@@ -256,3 +275,6 @@ if __name__ == "__main__":
 
 	else:
 		raise ValueError("Unknown exec method")
+
+if __name__ == "__main__":
+	main()
