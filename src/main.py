@@ -67,8 +67,11 @@ class RunParams:
 	# Output json file path
 	output_json_path: str | None
 
-	# Output image dir path
-	output_img_path: str | None
+	# Output agent image dir path
+	output_img_agent_path: str | None
+
+	# Output satisfaction image dir path
+	output_img_satisfaction_path: str | None
 
 	# Display method
 	display_method: DisplayMethod
@@ -95,8 +98,10 @@ def run(params: RunParams):
 
 	# Setup display
 	if params.display_method.needs_dir():
-		assert params.output_img_path is not None, "Display method needs output image path, but it was `None`"
-		os.makedirs(params.output_img_path, exist_ok=True)
+		if params.output_img_agent_path is not None:
+			os.makedirs(params.output_img_agent_path, exist_ok=True)
+		if params.output_img_satisfaction_path is not None:
+			os.makedirs(params.output_img_satisfaction_path, exist_ok=True)
 
 	# Visualize graph
 	with plt.ion():
@@ -138,12 +143,21 @@ def run(params: RunParams):
 				fig.canvas.flush_events()
 
 			elif params.display_method == DisplayMethod.GRID_FILE:
-				buffer = graph.agent_img()
-				buffer = [(int(255 * r), int(255 * g), int(255 * b)) for row in buffer for r, g, b in row]
+				if params.output_img_agent_path is not None:
+					buffer = graph.agent_img()
+					buffer = [(int(255 * r), int(255 * g), int(255 * b)) for row in buffer for r, g, b in row]
 
-				img = Image.new("RGB", (params.graph_size[0], params.graph_size[1]))
-				img.putdata(buffer)
-				img.save(f"{params.output_img_path}/{cur_round}.png")
+					img = Image.new("RGB", (params.graph_size[0], params.graph_size[1]))
+					img.putdata(buffer)
+					img.save(f"{params.output_img_agent_path}/agent{cur_round}.png")
+
+				if params.output_img_satisfaction_path is not None:
+					buffer = graph.satisfaction_img()
+					buffer = [(int(255 * r), int(255 * g), int(255 * b)) for row in buffer for r, g, b in row]
+
+					img = Image.new("RGB", (params.graph_size[0], params.graph_size[1]))
+					img.putdata(buffer)
+					img.save(f"{params.output_img_satisfaction_path}/satisfaction{cur_round}.png")
 
 			else:
 				raise ValueError("Unknown display method")
@@ -210,18 +224,19 @@ def main():
 		# Json output
 		JSON_OUTPUT = 2,
 
-	exec_method = ExecMethod.JSON_OUTPUT
+	exec_method = ExecMethod.NORMAL
 
 	if exec_method == ExecMethod.NORMAL:
 		params = RunParams(
-			graph_size=[80, 80],
+			graph_size=[250, 250],
 			seed=773,
 			empty_chance=0.1,
 			agent_weights={ NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 },
-			output_json_path="output.json",
-			output_img_path="output",
-			display_method=DisplayMethod.GRID,
-			rounds_per_display=1
+			output_json_path=None,
+			output_img_agent_path="output",
+			output_img_satisfaction_path="output",
+			display_method=DisplayMethod.GRID_FILE,
+			rounds_per_display=100000
 		)
 
 		run(params)
@@ -239,7 +254,8 @@ def main():
 				empty_chance=0.1,
 				agent_weights={ GAgent( agent_idx / (agent_count - 1.0) ): 1.0 for agent_idx in range(agent_count) },
 				output_json_path=f"output/s{seed}.json",
-				output_img_path=None,
+				output_img_agent_path=None,
+				output_img_satisfaction_path=None,
 				display_method=DisplayMethod.NONE,
 				rounds_per_display=1
 			)
@@ -258,7 +274,8 @@ def main():
 			empty_chance=0.1,
 			agent_weights={ NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 },
 			output_json_path=None,
-			output_img_path=None,
+			output_img_agent_path=None,
+			output_img_satisfaction_path=None,
 			display_method=DisplayMethod.NONE,
 			rounds_per_display=1
 		)
