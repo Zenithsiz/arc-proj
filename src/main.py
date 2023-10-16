@@ -228,15 +228,15 @@ def main():
 
 	if exec_method == ExecMethod.NORMAL:
 		params = RunParams(
-			graph_size=[250, 250],
+			graph_size=[80, 80],
 			seed=773,
 			empty_chance=0.1,
 			agent_weights={ NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 },
 			output_json_path=None,
-			output_img_agent_path="output",
-			output_img_satisfaction_path="output",
-			display_method=DisplayMethod.GRID_FILE,
-			rounds_per_display=100000
+			output_img_agent_path=None,
+			output_img_satisfaction_path=None,
+			display_method=DisplayMethod.GRAPH,
+			rounds_per_display=1
 		)
 
 		run(params)
