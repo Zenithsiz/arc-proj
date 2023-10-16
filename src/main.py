@@ -227,15 +227,16 @@ def main():
 	exec_method = ExecMethod.NORMAL
 
 	if exec_method == ExecMethod.NORMAL:
+		agent_count = 5
 		params = RunParams(
 			graph_size=[80, 80],
 			seed=773,
-			empty_chance=0.1,
-			agent_weights={ NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 },
+			empty_chance=0,
+			agent_weights={ GAgent( agent_idx / (agent_count - 1.0) ): 1.0 for agent_idx in range(agent_count) },
 			output_json_path=None,
-			output_img_agent_path=None,
-			output_img_satisfaction_path=None,
-			display_method=DisplayMethod.GRAPH,
+			output_img_agent_path="output",
+			output_img_satisfaction_path="output",
+			display_method=DisplayMethod.GRID,
 			rounds_per_display=1
 		)
 

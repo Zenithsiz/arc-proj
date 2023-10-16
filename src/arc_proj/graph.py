@@ -11,6 +11,7 @@ import networkx as nx
 import numpy
 
 from arc_proj.agent import Agent
+import arc_proj.util as util
 
 # Node position type
 NodePos = Tuple[int, int]
@@ -269,7 +270,7 @@ class Graph:
 		img = [[(0, 0, 0) for _ in range(self.size[0])] for _ in range(self.size[1])]
 		for node_pos in self.graph.nodes:
 			agent = self.agents.get(node_pos, None)
-			img[node_pos[1]][node_pos[0]] = agent.color() if agent is not None else [0.5, 0.5, 0.5]
+			img[node_pos[1]][node_pos[0]] = agent.color() if agent is not None else (0.5, 0.5, 0.5)
 
 		return img
 
@@ -281,7 +282,15 @@ class Graph:
 		for node_pos in self.graph.nodes:
 			satisfaction = self.agent_satisfaction(node_pos)
 			satisfied = self.agent_satisfied(node_pos)
-			img[node_pos[1]][node_pos[0]] = [satisfaction, 0.0, satisfied] if satisfaction is not None else [1.0, 0.0, 1.0]
+			agent = util.try_index_dict(self.agents, node_pos)
+			threshold = agent.threshold() if agent is not None else None
+
+			match satisfied:
+				case None : color = (0.5, 0.5, 0.5)
+				case True : color = (0.0, (satisfaction - threshold) / (1 - threshold), 0.0)
+				case False: color = (1.0 - satisfaction / threshold, 0.0, 0.0)
+
+			img[node_pos[1]][node_pos[0]] = color
 
 		return img
 
