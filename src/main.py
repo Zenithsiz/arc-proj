@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from enum import Enum
 from io import StringIO
 from typing import Tuple
+import matplotlib as mpl
+from matplotlib.colors import LinearSegmentedColormap
 
 import matplotlib.pyplot as plt
 import numpy
@@ -103,6 +105,9 @@ def run(params: RunParams):
 		if params.output_img_satisfaction_path is not None:
 			os.makedirs(params.output_img_satisfaction_path, exist_ok=True)
 
+	# Cache the agent colors
+	agent_colors = [agent.color() for agent in params.agent_weights.keys()]
+
 	# Visualize graph
 	with plt.ion():
 		# Create the figure
@@ -128,15 +133,39 @@ def run(params: RunParams):
 			elif params.display_method == DisplayMethod.GRID:
 				fig.clear()
 
-				# Show all nodes
+				# Show all agents
 				ax = fig.add_subplot(1, 2, 1)
 				ax.axis("off")
 				ax.imshow(graph.agent_img())
+
+				# Add the color bar for the agents
+				fig.colorbar(
+					mpl.cm.ScalarMappable(
+						norm=mpl.colors.Normalize(vmin=0.0, vmax=1.0),
+						cmap=LinearSegmentedColormap.from_list('agent', agent_colors, N=len(agent_colors))
+					),
+					ax=ax,
+					pad=0.05,
+					ticks=[idx / len(agent_colors) for idx in range(len(agent_colors)+1)],
+					location="left"
+				)
 
 				# The the satisfaction of each one, in a separate plot
 				ax = fig.add_subplot(1, 2, 2)
 				ax.axis("off")
 				ax.imshow(graph.satisfaction_img())
+
+				# Add the color bar for the satisfaction
+				colors = [(1, 0, 0), (0, 0, 0), (0, 1, 0)]
+				fig.colorbar(
+					mpl.cm.ScalarMappable(
+						norm=mpl.colors.Normalize(vmin=0.0, vmax=1.0),
+						cmap=LinearSegmentedColormap.from_list('agent_satisfaction', colors)
+					),
+					ax=ax,
+					pad=0.05,
+					location="right"
+				)
 
 				fig.tight_layout()
 				fig.canvas.draw()
@@ -227,17 +256,23 @@ def main():
 	exec_method = ExecMethod.NORMAL
 
 	if exec_method == ExecMethod.NORMAL:
+		# `GAgent`
 		agent_count = 5
+		agents = [GAgent( agent_idx / (agent_count - 1.0) ) for agent_idx in range(agent_count)]
+
+		# Note: You can also use `NAgent`:
+		#agents = [NAgent(NAgentKind.RED), NAgent(NAgentKind.BLUE)]
+
 		params = RunParams(
 			graph_size=[80, 80],
 			seed=773,
-			empty_chance=0,
-			agent_weights={ GAgent( agent_idx / (agent_count - 1.0) ): 1.0 for agent_idx in range(agent_count) },
+			empty_chance=0.1,
+			agent_weights={ agent: 1.0 for agent in agents },
 			output_json_path=None,
 			output_img_agent_path="output",
 			output_img_satisfaction_path="output",
 			display_method=DisplayMethod.GRID,
-			rounds_per_display=1
+			rounds_per_display=1,
 		)
 
 		run(params)
@@ -249,16 +284,18 @@ def main():
 		os.makedirs("output", exist_ok=True)
 		for seed in range(seed_start, seed_end):
 			agent_count = 10
+			agents = [GAgent( agent_idx / (agent_count - 1.0) ) for agent_idx in range(agent_count)]
+
 			params = RunParams(
 				graph_size=[80, 80],
 				seed=seed,
 				empty_chance=0.1,
-				agent_weights={ GAgent( agent_idx / (agent_count - 1.0) ): 1.0 for agent_idx in range(agent_count) },
+				agent_weights={ agent: 1.0 for agent in agents },
 				output_json_path=f"output/s{seed}.json",
 				output_img_agent_path=None,
 				output_img_satisfaction_path=None,
 				display_method=DisplayMethod.NONE,
-				rounds_per_display=1
+				rounds_per_display=1,
 			)
 
 			run(params)
@@ -269,16 +306,18 @@ def main():
 		max_time_s = 30
 
 		# Parameters
+		agents = [NAgent(NAgentKind.RED), NAgent(NAgentKind.BLUE)]
+
 		params = RunParams(
 			graph_size=[80, 80],
 			seed=773,
 			empty_chance=0.1,
-			agent_weights={ NAgent(NAgentKind.RED): 1, NAgent(NAgentKind.BLUE): 1 },
+			agent_weights={ agent: 1 for agent in agents },
 			output_json_path=None,
 			output_img_agent_path=None,
 			output_img_satisfaction_path=None,
 			display_method=DisplayMethod.NONE,
-			rounds_per_display=1
+			rounds_per_display=1,
 		)
 
 		# Samples and totals
