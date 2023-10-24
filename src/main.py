@@ -156,7 +156,7 @@ def run(params: RunParams):
 				ax.imshow(graph.satisfaction_img())
 
 				# Add the color bar for the satisfaction
-				colors = [(1, 0, 0), (0, 0, 0), (0, 1, 0)]
+				colors = [(0.0, (1, 0, 0)), (graph.agent_ty.threshold(), (0, 0, 0)), (1.0, (0, 1, 0))]
 				fig.colorbar(
 					mpl.cm.ScalarMappable(
 						norm=mpl.colors.Normalize(vmin=0.0, vmax=1.0),
