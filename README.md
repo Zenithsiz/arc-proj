@@ -7,6 +7,8 @@
 > - 96735: Filipe Rodrigues
 > - 96766: Sara Sant’Ana
 > - 97366: Francisco Silva
+>
+> See the `proj` branch for the code submitted for the project.
 
 # Configuration
 

@@ -11,7 +11,6 @@ import networkx as nx
 import numpy
 
 from arc_proj.agent import Agent
-import arc_proj.util as util
 
 # Node position type
 NodePos = Tuple[int, int]
@@ -53,6 +52,9 @@ class Graph:
 	# Graph size
 	size: Tuple[int, int]
 
+	# Agent type
+	agent_ty: type | None
+
 	# Agents
 	agents: dict[NodePos, Agent]
 
@@ -73,6 +75,7 @@ class Graph:
 		# Create the graph and initialize it to empty
 		self.size = graph_size
 		self.graph: nx.Graph = nx.grid_2d_graph(graph_size[0], graph_size[1])
+		self.agent_ty = None
 		self.agents = dict()
 		self.random_state = numpy.random.RandomState(seed)
 		self.debug = DebugOptions(
@@ -206,8 +209,16 @@ class Graph:
 
 			# Select a random agent
 			agent = self.random_state.choice(agents, p=agent_weights)
+
+			# Then add it to the map
 			self.agents[node_pos] = agent
 			self.cache.empty_nodes.remove(node_pos)
+
+			# Then update our agent type
+			if self.agent_ty is None:
+				self.agent_ty = type(agent)
+			else:
+				assert self.agent_ty == type(agent), "Cannot use agents of different types in the same graph!"
 
 		# At the end, update the remaining caches
 		self.update_unsatisfied_nodes_cache_multiple(self.graph.nodes)
@@ -257,11 +268,7 @@ class Graph:
 		if satisfaction is None:
 			return None
 
-		# Then check with the agent
-		# Note: Since `satisfaction` isn't `None`, we know it must exist
-		agent = self.agents[node_pos]
-
-		return satisfaction >= agent.threshold()
+		return satisfaction >= self.agent_ty.threshold()
 
 	def agent_img(self) -> list[list[Tuple[int, int, int]]]:
 		"""
@@ -282,8 +289,7 @@ class Graph:
 		for node_pos in self.graph.nodes:
 			satisfaction = self.agent_satisfaction(node_pos)
 			satisfied = self.agent_satisfied(node_pos)
-			agent = util.try_index_dict(self.agents, node_pos)
-			threshold = agent.threshold() if agent is not None else None
+			threshold = self.agent_ty.threshold()
 
 			match satisfied:
 				case None : color = (0.5, 0.5, 0.5)

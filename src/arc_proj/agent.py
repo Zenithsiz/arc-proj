@@ -17,7 +17,8 @@ class Agent:
 		"""
 		raise NotImplementedError
 
-	def threshold(self) -> float:
+	@staticmethod
+	def threshold() -> float:
 		"""
 		Returns the satisfaction threshold for this agent
 		"""
@@ -57,7 +58,8 @@ class NAgent(Agent):
 		# Else our satisfaction is the number of similar agents within our neighbors
 		return sum(self.kind == neighbor.kind for neighbor in neighbors) / len(neighbors)
 
-	def threshold(self) -> float:
+	@staticmethod
+	def threshold() -> float:
 		return 0.5
 
 	def color(self) -> Tuple[int, int, int]:
@@ -84,7 +86,8 @@ class GAgent(Agent):
 		# Else our satisfaction is the number of similar agents within our neighbors
 		return 1.0 - sum( abs(self.inner - neighbor.inner)**0.5 for neighbor in neighbors) / len(neighbors)
 
-	def threshold(self) -> float:
+	@staticmethod
+	def threshold() -> float:
 		return 0.5
 
 	def color(self) -> Tuple[int, int, int]:
