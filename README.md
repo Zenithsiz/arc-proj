@@ -8,7 +8,7 @@
 > - 96766: Sara Sant’Ana
 > - 97366: Francisco Silva
 >
-> See the `proj` branch for the code submitted for the project.
+> See the `proj` branch for the code submitted for the project. This branch is further ahead with some fixes for the presentation.
 
 # Configuration
 
