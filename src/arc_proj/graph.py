@@ -53,7 +53,7 @@ class Graph:
 	size: Tuple[int, int]
 
 	# Agent type
-	agent_ty: type | None
+	agent_ty: type[Agent] | None
 
 	# Agents
 	agents: dict[NodePos, Agent]
